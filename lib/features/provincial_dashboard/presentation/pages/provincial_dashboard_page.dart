@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_event.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../auth/presentation/pages/login_page.dart';
 
 class ProvincialDashboardPage extends StatefulWidget {
   const ProvincialDashboardPage({super.key});
@@ -25,19 +30,23 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
     });
   }
 
-  void _logout() async {
-    await supabase.auth.signOut();
-    // Navegar de vuelta al login o la pantalla inicial (ajusta la ruta según tu app)
-    if (mounted) {
-      // Reemplaza '/' con la ruta de tu pantalla de login si es diferente
-      Navigator.of(context).pushReplacementNamed('/'); 
-    }
+  void _logout() {
+    context.read<AuthBloc>().add(const SignOutRequested());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8), // Fondo moderno y claro
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF4F6F8), // Fondo moderno y claro
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.indigo.shade700,
@@ -201,6 +210,7 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
           style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
         ),
       ),
+    ),
     );
   }
 }

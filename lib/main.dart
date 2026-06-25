@@ -8,6 +8,10 @@ import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'features/auth/presentation/pages/welcome_page.dart';
 import 'injection_container.dart';
+import 'features/auth/presentation/pages/change_initial_password_page.dart';
+import 'features/provincial_dashboard/presentation/pages/provincial_dashboard_page.dart';
+import 'features/recinto_dashboard/presentation/pages/recinto_dashboard_page.dart';
+import 'features/veedor_dashboard/presentation/pages/veedor_dashboard_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,12 +38,27 @@ class MyApp extends StatelessWidget {
           builder: (context, state) {
             if (state is AuthLoading || state is AuthInitial) {
               return const Scaffold(
-                body: Center(
-                  child: CircularProgressIndicator(),
-                ),
+                body: Center(child: CircularProgressIndicator()),
               );
             } else if (state is AuthAuthenticated) {
-              return WelcomePage(user: state.user);
+              final user = state.user;
+
+              // Primero: forzar cambio de contraseña si aplica
+              if (user.debeCambiarPass) {
+                return const ChangeInitialPasswordPage();
+              }
+
+              // Luego: redirigir según rol
+              switch (user.rol) {
+                case 'coordinador_provincial':
+                  return const ProvincialDashboardPage();
+                case 'coordinador_recinto':
+                  return const RecintoDashboardPage();
+                case 'veedor':
+                  return const VeedorDashboardPage();
+                default:
+                  return WelcomePage(user: user); // fallback por si el rol es null
+              }
             } else {
               return const LoginPage();
             }

@@ -118,7 +118,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final user = supabaseClient.auth.currentUser;
       if (user == null) return null;
-      return UserModel.fromSupabaseUser(user);
+
+      // Consultar el perfil igual que en signIn
+      final Map<String, dynamic>? perfil = await supabaseClient
+          .from('perfiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      return UserModel.fromSupabaseUser(
+        user,
+        rol: perfil?['rol'] as String?,
+        debeCambiarPass: perfil?['debe_cambiar_pass'] as bool? ?? false,
+      );
     } catch (e) {
       throw Exception('Error al obtener usuario actual: $e');
     }
