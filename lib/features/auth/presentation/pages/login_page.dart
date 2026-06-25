@@ -7,9 +7,11 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/flag_stripe.dart';
 import '../widgets/icon_badge.dart';
 import '../widgets/loading_overlay.dart';
-import 'register_page.dart';
 import 'reset_password_page.dart';
-import 'welcome_page.dart';
+import '../../../provincial_dashboard/presentation/pages/provincial_dashboard_page.dart';
+import 'change_initial_password_page.dart';
+import '../../../recinto_dashboard/presentation/pages/recinto_dashboard_page.dart';
+import '../../../veedor_dashboard/presentation/pages/veedor_dashboard_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,29 +59,25 @@ class _LoginPageState extends State<LoginPage> {
             final user = state.user;
             
             if (user.debeCambiarPass) {
-              // Navigator.of(context).pushReplacement(
-              //   MaterialPageRoute(builder: (_) => const ChangeInitialPasswordPage()),
-              // );
-              debugPrint('Redirigir a ChangeInitialPasswordPage');
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const ChangeInitialPasswordPage()),
+              );
             } else {
               switch (user.rol) {
                 case 'coordinador_provincial':
-                  // Navigator.of(context).pushReplacement(
-                  //   MaterialPageRoute(builder: (_) => const ProvincialDashboardPage()),
-                  // );
-                  debugPrint('Redirigir a ProvincialDashboardPage');
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const ProvincialDashboardPage()),
+                  );
                   break;
                 case 'coordinador_recinto':
-                  // Navigator.of(context).pushReplacement(
-                  //   MaterialPageRoute(builder: (_) => const RecintoDashboardPage()),
-                  // );
-                  debugPrint('Redirigir a RecintoDashboardPage');
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const RecintoDashboardPage()),
+                  );
                   break;
                 case 'veedor':
-                  // Navigator.of(context).pushReplacement(
-                  //   MaterialPageRoute(builder: (_) => const VeedorDashboardPage()),
-                  // );
-                  debugPrint('Redirigir a VeedorDashboardPage');
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const VeedorDashboardPage()),
+                  );
                   break;
                 default:
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -88,10 +86,6 @@ class _LoginPageState extends State<LoginPage> {
                       backgroundColor: Theme.of(context).colorScheme.error,
                     ),
                   );
-                  // Opcionalmente redirigir a un WelcomePage si no hay rol
-                  // Navigator.of(context).pushReplacement(
-                  //   MaterialPageRoute(builder: (_) => WelcomePage(user: user)),
-                  // );
                   break;
               }
             }
@@ -202,34 +196,8 @@ class _LoginPageState extends State<LoginPage> {
                             child: const Text('Iniciar sesión'),
                           ),
                         ),
-                        const SizedBox(height: 24),
-
-                        // Register link
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              '¿No tienes cuenta?',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => const RegisterPage(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                'Regístrate',
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        
+                        // NOTA: Se eliminó completamente la sección de "¿No tienes cuenta? Regístrate"
                       ],
                     ),
                   ),
