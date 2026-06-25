@@ -8,15 +8,19 @@ class UserModel extends UserEntity {
     super.displayName,
     super.photoUrl,
     super.createdAt,
+    super.rol,
+    super.debeCambiarPass = false,
   });
 
-  factory UserModel.fromSupabaseUser(User user) {
+  factory UserModel.fromSupabaseUser(User user, {String? rol, bool debeCambiarPass = false}) {
     return UserModel(
       id: user.id,
       email: user.email ?? '',
       displayName: user.userMetadata?['display_name'] as String?,
       photoUrl: user.userMetadata?['avatar_url'] as String?,
       createdAt: DateTime.parse(user.createdAt),
+      rol: rol,
+      debeCambiarPass: debeCambiarPass,
     );
   }
 
@@ -27,6 +31,8 @@ class UserModel extends UserEntity {
       displayName: displayName,
       photoUrl: photoUrl,
       createdAt: createdAt,
+      rol: rol,
+      debeCambiarPass: debeCambiarPass,
     );
   }
 }

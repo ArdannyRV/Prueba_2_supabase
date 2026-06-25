@@ -46,7 +46,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw Exception('No se pudo iniciar sesión');
       }
 
-      return UserModel.fromSupabaseUser(response.user!);
+      final Map<String, dynamic>? perfil = await supabaseClient
+          .from('perfiles')
+          .select('*')
+          .eq('id', response.user!.id)
+          .maybeSingle();
+
+      return UserModel.fromSupabaseUser(
+        response.user!,
+        rol: perfil?['rol'] as String?,
+        debeCambiarPass: perfil?['debe_cambiar_pass'] as bool? ?? false,
+      );
     } on AuthException catch (e) {
       throw Exception(e.message);
     } catch (e) {

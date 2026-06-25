@@ -54,11 +54,47 @@ class _LoginPageState extends State<LoginPage> {
               ),
             );
           } else if (state is AuthAuthenticated) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: (_) => WelcomePage(user: state.user),
-              ),
-            );
+            final user = state.user;
+            
+            if (user.debeCambiarPass) {
+              // Navigator.of(context).pushReplacement(
+              //   MaterialPageRoute(builder: (_) => const ChangeInitialPasswordPage()),
+              // );
+              debugPrint('Redirigir a ChangeInitialPasswordPage');
+            } else {
+              switch (user.rol) {
+                case 'coordinador_provincial':
+                  // Navigator.of(context).pushReplacement(
+                  //   MaterialPageRoute(builder: (_) => const ProvincialDashboardPage()),
+                  // );
+                  debugPrint('Redirigir a ProvincialDashboardPage');
+                  break;
+                case 'coordinador_recinto':
+                  // Navigator.of(context).pushReplacement(
+                  //   MaterialPageRoute(builder: (_) => const RecintoDashboardPage()),
+                  // );
+                  debugPrint('Redirigir a RecintoDashboardPage');
+                  break;
+                case 'veedor':
+                  // Navigator.of(context).pushReplacement(
+                  //   MaterialPageRoute(builder: (_) => const VeedorDashboardPage()),
+                  // );
+                  debugPrint('Redirigir a VeedorDashboardPage');
+                  break;
+                default:
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Rol "${user.rol}" no reconocido en el sistema.'),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                    ),
+                  );
+                  // Opcionalmente redirigir a un WelcomePage si no hay rol
+                  // Navigator.of(context).pushReplacement(
+                  //   MaterialPageRoute(builder: (_) => WelcomePage(user: user)),
+                  // );
+                  break;
+              }
+            }
           }
         },
         builder: (context, state) {
