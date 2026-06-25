@@ -5,6 +5,8 @@
   "scripts": {
     "deploy": "vercel --prod"
   },
-  "dependencies": {},
+  "dependencies": {
+    "nodemailer": "^6.9.13"
+  },
   "devDependencies": {}
 }
