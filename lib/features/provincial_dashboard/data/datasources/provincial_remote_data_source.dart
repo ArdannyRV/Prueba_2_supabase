@@ -115,7 +115,11 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
       );
 
       if (response.status != 200) {
-        throw Exception('Error de la Edge Function: ${response.data['error'] ?? response.data}');
+        final errorMsg = response.data['error'] ?? '';
+        if (errorMsg.toString().contains('already been registered')) {
+          throw Exception('El correo electrónico ya está registrado en el sistema.');
+        }
+        throw Exception('Error al crear usuario: $errorMsg');
       }
 
       final userId = response.data['userId'] as String;

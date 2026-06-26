@@ -47,6 +47,7 @@ class _CreateCoordinadorDialogState extends State<CreateCoordinadorDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
       title: const Text('Nuevo Coordinador de Recinto'),
       content: SingleChildScrollView(
         child: Form(

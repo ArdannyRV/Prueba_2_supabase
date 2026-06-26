@@ -93,8 +93,10 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _submit,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                child: const Text('Guardar Recinto'),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Text('Guardar Recinto'),
+                ),
               ),
               const SizedBox(height: 24),
             ],

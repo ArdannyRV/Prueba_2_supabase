@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_theme.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../injection_container.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -37,7 +37,7 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
       ),
       builder: (_) => BlocProvider.value(
         value: _bloc,
@@ -84,13 +84,14 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
           ),
         ],
         child: Scaffold(
-          backgroundColor: const Color(0xFFF4F6F8),
+          backgroundColor: AppTheme.backgroundColor,
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: Colors.indigo.shade700,
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            foregroundColor: Colors.white,
             title: Text(
               'Panel Provincial',
-              style: GoogleFonts.inter(
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
               ),
@@ -121,8 +122,7 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
                         const SizedBox(height: 16),
                         Text(
                           'No hay recintos registrados aún.',
-                          style: GoogleFonts.inter(
-                            fontSize: 18,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w500,
                             color: Colors.grey.shade600,
                           ),
@@ -148,19 +148,19 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
                         elevation: 2,
                         shadowColor: Colors.black12,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          side: const BorderSide(color: AppTheme.borderColor),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                           leading: CircleAvatar(
-                            backgroundColor: Colors.indigo.shade100,
-                            child: Icon(Icons.how_to_vote_rounded, color: Colors.indigo.shade700),
+                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                            child: Icon(Icons.how_to_vote_rounded, color: Theme.of(context).colorScheme.primary),
                           ),
                           title: Text(
                             recinto.nombre,
-                            style: GoogleFonts.inter(
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
                             ),
                           ),
                           subtitle: Padding(
@@ -175,9 +175,8 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
                                     Expanded(
                                       child: Text(
                                         '${recinto.parroquia}, ${recinto.canton}',
-                                        style: GoogleFonts.inter(
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                           color: Colors.grey.shade700,
-                                          fontSize: 13,
                                         ),
                                       ),
                                     ),
@@ -190,10 +189,9 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
                                     const SizedBox(width: 4),
                                     Text(
                                       '${recinto.mesasConActa} / ${recinto.totalMesas} mesas con acta',
-                                      style: GoogleFonts.inter(
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: Colors.green.shade700,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
@@ -225,11 +223,11 @@ class _ProvincialDashboardPageState extends State<ProvincialDashboardPage> {
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: _showCreateRecintoBottomSheet,
-            backgroundColor: Colors.indigo.shade600,
+            backgroundColor: AppTheme.primaryColor,
             icon: const Icon(Icons.add_business_rounded, color: Colors.white),
             label: Text(
               'Nuevo Recinto',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.white),
             ),
           ),
         ),

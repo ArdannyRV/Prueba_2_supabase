@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_theme.dart';
 import '../../domain/entities/recinto_entity.dart';
 import '../bloc/provincial_bloc.dart';
 import '../widgets/create_coordinador_dialog.dart';
@@ -23,13 +23,14 @@ class RecintoDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.indigo.shade700,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         title: Text(
           recinto.nombre,
-          style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -42,13 +43,13 @@ class RecintoDetailPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Detalles del Recinto', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text('Detalles del Recinto', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.location_on, color: Colors.grey),
                       const SizedBox(width: 8),
-                      Text('${recinto.parroquia}, ${recinto.canton}', style: GoogleFonts.inter(fontSize: 16)),
+                      Text('${recinto.parroquia}, ${recinto.canton}', style: Theme.of(context).textTheme.bodyLarge),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -56,7 +57,7 @@ class RecintoDetailPage extends StatelessWidget {
                     children: [
                       const Icon(Icons.how_to_vote, color: Colors.grey),
                       const SizedBox(width: 8),
-                      Text('${recinto.mesasConActa} / ${recinto.totalMesas} mesas registradas', style: GoogleFonts.inter(fontSize: 16)),
+                      Text('${recinto.mesasConActa} / ${recinto.totalMesas} mesas registradas', style: Theme.of(context).textTheme.bodyLarge),
                     ],
                   ),
                   const SizedBox(height: 24),
@@ -68,7 +69,6 @@ class RecintoDetailPage extends StatelessWidget {
                         onPressed: () => _showCreateCoordinadorDialog(context),
                         icon: const Icon(Icons.person_add),
                         label: const Text('Asignar Coordinador'),
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo.shade600, foregroundColor: Colors.white),
                       ),
                     )
                   else
@@ -80,7 +80,7 @@ class RecintoDetailPage extends StatelessWidget {
                           Icon(Icons.check_circle, color: Colors.green.shade700),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: Text('Este recinto ya tiene un coordinador asignado.', style: GoogleFonts.inter(color: Colors.green.shade800, fontWeight: FontWeight.w500)),
+                            child: Text('Este recinto ya tiene un coordinador asignado.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.green.shade800, fontWeight: FontWeight.w500)),
                           ),
                         ],
                       ),
@@ -96,6 +96,11 @@ class RecintoDetailPage extends StatelessWidget {
                 (context, index) {
                   final mesa = recinto.mesas[index];
                   return Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      side: const BorderSide(color: AppTheme.borderColor),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: CircleAvatar(
@@ -105,13 +110,13 @@ class RecintoDetailPage extends StatelessWidget {
                           color: mesa.tieneActa ? Colors.green.shade700 : Colors.grey.shade600,
                         ),
                       ),
-                      title: Text('Mesa ${mesa.numeroMesa}', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+                      title: Text('Mesa ${mesa.numeroMesa}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
                       subtitle: mesa.tieneActa
                           ? Text(
                               'GPS: ${mesa.latitud?.toStringAsFixed(5) ?? 'N/A'}, ${mesa.longitud?.toStringAsFixed(5) ?? 'N/A'}',
-                              style: GoogleFonts.inter(color: Colors.blue.shade700, fontSize: 12),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.blue.shade700),
                             )
-                          : Text('Sin acta registrada', style: GoogleFonts.inter(color: Colors.grey.shade600, fontSize: 12)),
+                          : Text('Sin acta registrada', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600)),
                       trailing: mesa.tieneActa ? const Icon(Icons.receipt_long, color: Colors.green) : null,
                     ),
                   );
