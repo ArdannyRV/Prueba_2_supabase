@@ -10,6 +10,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:connectivity_plus/connectivity_plus.dart' as _i895;
+import 'package:elecciones/core/di/app_module.dart' as _i1051;
 import 'package:elecciones/core/network/network_info.dart' as _i55;
 import 'package:elecciones/features/auth/data/datasources/auth_remote_data_source.dart'
     as _i26;
@@ -27,18 +28,44 @@ import 'package:elecciones/features/auth/domain/usecases/sign_out.dart'
 import 'package:elecciones/features/auth/domain/usecases/sign_up.dart' as _i591;
 import 'package:elecciones/features/auth/presentation/bloc/auth_bloc.dart'
     as _i839;
+import 'package:elecciones/features/provincial_dashboard/data/datasources/dashboard_remote_data_source.dart'
+    as _i558;
 import 'package:elecciones/features/provincial_dashboard/data/datasources/provincial_remote_data_source.dart'
     as _i395;
+import 'package:elecciones/features/provincial_dashboard/data/repositories/dashboard_repository_impl.dart'
+    as _i324;
 import 'package:elecciones/features/provincial_dashboard/data/repositories/provincial_repository_impl.dart'
     as _i920;
+import 'package:elecciones/features/provincial_dashboard/domain/repositories/dashboard_repository.dart'
+    as _i1038;
 import 'package:elecciones/features/provincial_dashboard/domain/repositories/provincial_repository.dart'
     as _i860;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/asignar_coordinador_usecase.dart'
+    as _i304;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/create_coordinador_independiente_usecase.dart'
+    as _i908;
 import 'package:elecciones/features/provincial_dashboard/domain/usecases/create_coordinador_usecase.dart'
     as _i1010;
 import 'package:elecciones/features/provincial_dashboard/domain/usecases/create_recinto_usecase.dart'
     as _i880;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/delete_coordinador_usecase.dart'
+    as _i1049;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/delete_recinto_usecase.dart'
+    as _i636;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/desasignar_coordinador_usecase.dart'
+    as _i435;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/get_all_coordinadores_usecase.dart'
+    as _i177;
 import 'package:elecciones/features/provincial_dashboard/domain/usecases/get_recintos_usecase.dart'
     as _i328;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/get_resultados_por_cargo_usecase.dart'
+    as _i925;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/get_unassigned_coordinadores_usecase.dart'
+    as _i1005;
+import 'package:elecciones/features/provincial_dashboard/domain/usecases/update_coordinador_usecase.dart'
+    as _i288;
+import 'package:elecciones/features/provincial_dashboard/presentation/bloc/dashboard_bloc.dart'
+    as _i191;
 import 'package:elecciones/features/provincial_dashboard/presentation/bloc/provincial_bloc.dart'
     as _i173;
 import 'package:get_it/get_it.dart' as _i174;
@@ -56,16 +83,23 @@ extension GetItInjectableX on _i174.GetIt {
       environment,
       environmentFilter,
     );
+    final appModule = _$AppModule();
+    gh.lazySingleton<_i454.SupabaseClient>(() => appModule.supabaseClient);
+    gh.lazySingleton<_i895.Connectivity>(() => appModule.connectivity);
     gh.lazySingleton<_i55.NetworkInfo>(
         () => _i55.NetworkInfoImpl(gh<_i895.Connectivity>()));
     gh.lazySingleton<_i395.ProvincialRemoteDataSource>(
         () => _i395.ProvincialRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
     gh.lazySingleton<_i26.AuthRemoteDataSource>(
         () => _i26.AuthRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
+    gh.lazySingleton<_i558.DashboardRemoteDataSource>(
+        () => _i558.DashboardRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
     gh.lazySingleton<_i850.AuthRepository>(() => _i1056.AuthRepositoryImpl(
           remoteDataSource: gh<_i26.AuthRemoteDataSource>(),
           networkInfo: gh<_i55.NetworkInfo>(),
         ));
+    gh.lazySingleton<_i1038.DashboardRepository>(() =>
+        _i324.DashboardRepositoryImpl(gh<_i558.DashboardRemoteDataSource>()));
     gh.factory<_i249.GetCurrentUser>(
         () => _i249.GetCurrentUser(gh<_i850.AuthRepository>()));
     gh.factory<_i583.ResetPassword>(
@@ -75,12 +109,32 @@ extension GetItInjectableX on _i174.GetIt {
     gh.factory<_i591.SignUp>(() => _i591.SignUp(gh<_i850.AuthRepository>()));
     gh.lazySingleton<_i860.ProvincialRepository>(() =>
         _i920.ProvincialRepositoryImpl(gh<_i395.ProvincialRemoteDataSource>()));
+    gh.factory<_i925.GetResultadosPorCargoUseCase>(() =>
+        _i925.GetResultadosPorCargoUseCase(gh<_i1038.DashboardRepository>()));
     gh.lazySingleton<_i1010.CreateCoordinadorUseCase>(() =>
         _i1010.CreateCoordinadorUseCase(gh<_i860.ProvincialRepository>()));
     gh.lazySingleton<_i880.CreateRecintoUseCase>(
         () => _i880.CreateRecintoUseCase(gh<_i860.ProvincialRepository>()));
     gh.lazySingleton<_i328.GetRecintosUseCase>(
         () => _i328.GetRecintosUseCase(gh<_i860.ProvincialRepository>()));
+    gh.factory<_i304.AsignarCoordinadorUseCase>(() =>
+        _i304.AsignarCoordinadorUseCase(gh<_i860.ProvincialRepository>()));
+    gh.factory<_i908.CreateCoordinadorIndependienteUseCase>(() =>
+        _i908.CreateCoordinadorIndependienteUseCase(
+            gh<_i860.ProvincialRepository>()));
+    gh.factory<_i1049.DeleteCoordinadorUseCase>(() =>
+        _i1049.DeleteCoordinadorUseCase(gh<_i860.ProvincialRepository>()));
+    gh.factory<_i636.DeleteRecintoUseCase>(
+        () => _i636.DeleteRecintoUseCase(gh<_i860.ProvincialRepository>()));
+    gh.factory<_i435.DesasignarCoordinadorUseCase>(() =>
+        _i435.DesasignarCoordinadorUseCase(gh<_i860.ProvincialRepository>()));
+    gh.factory<_i177.GetAllCoordinadoresUseCase>(() =>
+        _i177.GetAllCoordinadoresUseCase(gh<_i860.ProvincialRepository>()));
+    gh.factory<_i1005.GetUnassignedCoordinadoresUseCase>(() =>
+        _i1005.GetUnassignedCoordinadoresUseCase(
+            gh<_i860.ProvincialRepository>()));
+    gh.factory<_i288.UpdateCoordinadorUseCase>(
+        () => _i288.UpdateCoordinadorUseCase(gh<_i860.ProvincialRepository>()));
     gh.factory<_i839.AuthBloc>(() => _i839.AuthBloc(
           signIn: gh<_i681.SignIn>(),
           signUp: gh<_i591.SignUp>(),
@@ -88,11 +142,25 @@ extension GetItInjectableX on _i174.GetIt {
           signOut: gh<_i138.SignOut>(),
           getCurrentUser: gh<_i249.GetCurrentUser>(),
         ));
+    gh.factory<_i191.DashboardBloc>(
+        () => _i191.DashboardBloc(gh<_i925.GetResultadosPorCargoUseCase>()));
     gh.factory<_i173.ProvincialBloc>(() => _i173.ProvincialBloc(
           getRecintos: gh<_i328.GetRecintosUseCase>(),
           createRecinto: gh<_i880.CreateRecintoUseCase>(),
           createCoordinador: gh<_i1010.CreateCoordinadorUseCase>(),
+          deleteRecinto: gh<_i636.DeleteRecintoUseCase>(),
+          desasignarCoordinador: gh<_i435.DesasignarCoordinadorUseCase>(),
+          getUnassignedCoordinadores:
+              gh<_i1005.GetUnassignedCoordinadoresUseCase>(),
+          getAllCoordinadores: gh<_i177.GetAllCoordinadoresUseCase>(),
+          asignarCoordinador: gh<_i304.AsignarCoordinadorUseCase>(),
+          createCoordinadorIndependiente:
+              gh<_i908.CreateCoordinadorIndependienteUseCase>(),
+          deleteCoordinador: gh<_i1049.DeleteCoordinadorUseCase>(),
+          updateCoordinador: gh<_i288.UpdateCoordinadorUseCase>(),
         ));
     return this;
   }
 }
+
+class _$AppModule extends _i1051.AppModule {}

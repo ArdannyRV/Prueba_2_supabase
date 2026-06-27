@@ -15,10 +15,6 @@ Future<void> configureDependencies() async {
     anonKey: AppConstants.supabaseAnonKey,
   );
 
-  // Register external dependencies
-  getIt.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
-  getIt.registerLazySingleton<Connectivity>(() => Connectivity());
-
   // Initialize injectable
   getIt.init();
 }

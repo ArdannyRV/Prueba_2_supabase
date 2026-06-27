@@ -8,7 +8,7 @@ import '../widgets/flag_stripe.dart';
 import '../widgets/icon_badge.dart';
 import '../widgets/loading_overlay.dart';
 import 'reset_password_page.dart';
-import '../../../provincial_dashboard/presentation/pages/provincial_dashboard_page.dart';
+import '../../../provincial_dashboard/presentation/pages/provincial_main_page.dart';
 import 'change_initial_password_page.dart';
 import '../../../recinto_dashboard/presentation/pages/recinto_dashboard_page.dart';
 import '../../../veedor_dashboard/presentation/pages/veedor_dashboard_page.dart';
@@ -66,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
               switch (user.rol) {
                 case 'coordinador_provincial':
                   Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const ProvincialDashboardPage()),
+                    MaterialPageRoute(builder: (_) => const ProvincialMainPage()),
                   );
                   break;
                 case 'coordinador_recinto':

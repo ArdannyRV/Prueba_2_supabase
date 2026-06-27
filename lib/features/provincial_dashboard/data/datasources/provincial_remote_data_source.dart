@@ -2,9 +2,12 @@ import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../models/recinto_model.dart';
+import '../models/coordinador_model.dart';
 
 abstract class ProvincialRemoteDataSource {
   Future<List<RecintoModel>> getRecintos();
+  Future<List<CoordinadorModel>> getUnassignedCoordinadores();
+  Future<List<CoordinadorModel>> getAllCoordinadores();
   Future<void> createRecinto({
     required String nombre,
     required String parroquia,
@@ -19,6 +22,23 @@ abstract class ProvincialRemoteDataSource {
     required String telefono,
     required String correo,
   });
+  Future<void> createCoordinadorIndependiente({
+    required String cedula,
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+    required String correo,
+  });
+  Future<void> updateCoordinador({
+    required String id,
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+  });
+  Future<void> deleteCoordinador(String coordinadorId);
+  Future<void> asignarCoordinador(String recintoId, String coordinadorId);
+  Future<void> deleteRecinto(String recintoId);
+  Future<void> desasignarCoordinador(String recintoId);
 }
 
 @LazySingleton(as: ProvincialRemoteDataSource)
@@ -32,7 +52,7 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
     try {
       final response = await supabaseClient
           .from('recintos')
-          .select('*, mesas(*, actas(id, latitud, longitud))')
+          .select('*, mesas(*, actas(id, latitud, longitud)), coordinador:perfiles!coordinador_id(nombres, apellidos)')
           .order('nombre');
 
       return (response as List)
@@ -40,6 +60,56 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
           .toList();
     } catch (e) {
       throw Exception('Error al obtener recintos: $e');
+    }
+  }
+
+  @override
+  Future<List<CoordinadorModel>> getUnassignedCoordinadores() async {
+    try {
+      // 1. Obtener los IDs de coordinadores que ya están asignados a un recinto
+      final recintosRes = await supabaseClient
+          .from('recintos')
+          .select('coordinador_id')
+          .not('coordinador_id', 'is', null);
+      
+      final assignedIds = (recintosRes as List)
+          .map((r) => r['coordinador_id'] as String)
+          .toList();
+
+      // 2. Obtener perfiles que son coordinadores y NO están en la lista de asignados
+      var query = supabaseClient
+          .from('perfiles')
+          .select()
+          .eq('rol', 'coordinador_recinto');
+
+      if (assignedIds.isNotEmpty) {
+        final formattedIds = '(${assignedIds.join(',')})';
+        query = query.filter('id', 'not.in', formattedIds);
+      }
+
+      final response = await query;
+      return (response as List)
+          .map((json) => CoordinadorModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Error al obtener coordinadores vacantes: $e');
+    }
+  }
+
+  @override
+  Future<List<CoordinadorModel>> getAllCoordinadores() async {
+    try {
+      final response = await supabaseClient
+          .from('perfiles')
+          .select()
+          .eq('rol', 'coordinador_recinto')
+          .order('nombres');
+
+      return (response as List)
+          .map((json) => CoordinadorModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('Error al obtener coordinadores: $e');
     }
   }
 
@@ -101,36 +171,154 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
         throw Exception('Este recinto ya tiene un coordinador asignado.');
       }
 
-      // 2. Llamar a la Edge Function para crear usuario y perfil
-      final response = await supabaseClient.functions.invoke(
-        'create-user',
-        body: {
-          'cedula': cedula,
-          'nombres': nombres,
-          'apellidos': apellidos,
-          'telefono': telefono,
-          'correo': correo,
-          'rol': 'coordinador_recinto',
-        },
+      // 2. Crear usuario con instancia secundaria para no perder la sesión actual
+      final secClient = SupabaseClient(
+        AppConstants.supabaseUrl,
+        AppConstants.supabaseAnonKey,
+        authOptions: const AuthClientOptions(
+          autoRefreshToken: false,
+        ),
+      );
+      
+      final authResponse = await secClient.auth.signUp(
+        email: correo,
+        password: 'Ecuador2026',
       );
 
-      if (response.status != 200) {
-        final errorMsg = response.data['error'] ?? '';
-        if (errorMsg.toString().contains('already been registered')) {
-          throw Exception('El correo electrónico ya está registrado en el sistema.');
-        }
-        throw Exception('Error al crear usuario: $errorMsg');
+      final user = authResponse.user;
+      if (user == null) {
+        throw Exception('No se pudo crear el usuario en Auth.');
       }
 
-      final userId = response.data['userId'] as String;
+      // 3. Insertar/Actualizar perfil
+      await supabaseClient.from('perfiles').upsert({
+        'id': user.id,
+        'cedula': cedula,
+        'nombres': nombres,
+        'apellidos': apellidos,
+        'telefono': telefono,
+        'correo': correo,
+        'rol': 'coordinador_recinto',
+        'debe_cambiar_pass': true,
+      });
 
-      // 3. Asignar coordinador al recinto
+      // 4. Asignar coordinador al recinto
       await supabaseClient
           .from('recintos')
-          .update({'coordinador_id': userId})
+          .update({'coordinador_id': user.id})
+          .eq('id', recintoId);
+          
+      secClient.dispose();
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<void> createCoordinadorIndependiente({
+    required String cedula,
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+    required String correo,
+  }) async {
+    try {
+      // 1. Crear usuario con instancia secundaria
+      final secClient = SupabaseClient(
+        AppConstants.supabaseUrl,
+        AppConstants.supabaseAnonKey,
+        authOptions: const AuthClientOptions(
+          autoRefreshToken: false,
+        ),
+      );
+      
+      final authResponse = await secClient.auth.signUp(
+        email: correo,
+        password: 'Ecuador2026', // Contraseña por defecto pedida
+      );
+
+      final user = authResponse.user;
+      if (user == null) {
+        throw Exception('No se pudo crear el usuario en Auth.');
+      }
+
+      // 2. Actualizar tabla perfiles
+      await supabaseClient.from('perfiles').upsert({
+        'id': user.id,
+        'cedula': cedula,
+        'nombres': nombres,
+        'apellidos': apellidos,
+        'telefono': telefono,
+        'correo': correo,
+        'rol': 'coordinador_recinto',
+        'debe_cambiar_pass': true, // Según petición CRÍTICA
+      });
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  @override
+  Future<void> updateCoordinador({
+    required String id,
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+  }) async {
+    try {
+      await supabaseClient.from('perfiles').update({
+        'nombres': nombres,
+        'apellidos': apellidos,
+        'telefono': telefono,
+      }).eq('id', id);
+    } catch (e) {
+      throw Exception('Error al actualizar coordinador: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteCoordinador(String coordinadorId) async {
+    try {
+      // Nota: Eliminar un usuario completamente requiere Supabase Admin API.
+      // Si no tenemos admin API, eliminaremos solo el perfil o le cambiaremos el rol.
+      // El requerimiento decía "Eliminar en Supabase", así que borramos de 'perfiles' por ahora.
+      // (O puede fallar si hay llave foránea. Lo ideal es desactivarlo).
+      await supabaseClient.from('perfiles').delete().eq('id', coordinadorId);
+    } catch (e) {
+      throw Exception('Error al eliminar coordinador: $e');
+    }
+  }
+
+  @override
+  Future<void> asignarCoordinador(String recintoId, String coordinadorId) async {
+    try {
+      await supabaseClient
+          .from('recintos')
+          .update({'coordinador_id': coordinadorId})
           .eq('id', recintoId);
     } catch (e) {
-      throw Exception('Error al crear coordinador: $e');
+      throw Exception('Error al asignar coordinador: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteRecinto(String recintoId) async {
+    try {
+      await supabaseClient.from('recintos').delete().eq('id', recintoId);
+    } catch (e) {
+      throw Exception('Error al eliminar recinto: $e');
+    }
+  }
+
+  @override
+  Future<void> desasignarCoordinador(String recintoId) async {
+    try {
+      await supabaseClient
+          .from('recintos')
+          .update({'coordinador_id': null})
+          .eq('id', recintoId);
+    } catch (e) {
+      throw Exception('Error al desasignar coordinador: $e');
     }
   }
 }

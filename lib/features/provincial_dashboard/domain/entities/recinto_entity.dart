@@ -8,6 +8,7 @@ class RecintoEntity extends Equatable {
   final String canton;
   final String? provincia;
   final String? coordinadorId;
+  final String? coordinadorNombre;
   final List<MesaEntity> mesas;
 
   const RecintoEntity({
@@ -17,6 +18,7 @@ class RecintoEntity extends Equatable {
     required this.canton,
     this.provincia,
     this.coordinadorId,
+    this.coordinadorNombre,
     required this.mesas,
   });
 
@@ -31,6 +33,7 @@ class RecintoEntity extends Equatable {
         canton,
         provincia,
         coordinadorId,
+        coordinadorNombre,
         mesas,
       ];
 }

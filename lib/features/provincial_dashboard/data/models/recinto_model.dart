@@ -9,6 +9,7 @@ class RecintoModel extends RecintoEntity {
     required super.canton,
     super.provincia,
     super.coordinadorId,
+    super.coordinadorNombre,
     required super.mesas,
   });
 
@@ -27,6 +28,9 @@ class RecintoModel extends RecintoEntity {
       canton: json['canton'] as String,
       provincia: json['provincia'] as String?,
       coordinadorId: json['coordinador_id'] as String?,
+      coordinadorNombre: json['coordinador'] != null 
+          ? '${json['coordinador']['nombres'] ?? ''} ${json['coordinador']['apellidos'] ?? ''}'.trim()
+          : null,
       mesas: mesas,
     );
   }

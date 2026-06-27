@@ -1,49 +1,51 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/recinto_entity.dart';
+import '../../domain/entities/coordinador_entity.dart';
 
-abstract class ProvincialState extends Equatable {
-  const ProvincialState();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class ProvincialInitial extends ProvincialState {}
-
-class ProvincialLoading extends ProvincialState {}
-
-class ProvincialLoaded extends ProvincialState {
+class ProvincialState extends Equatable {
   final List<RecintoEntity> recintos;
+  final List<CoordinadorEntity> coordinadores; // All coordinadores
+  final List<CoordinadorEntity> unassignedCoordinadores;
+  final bool isLoading;
+  final String? errorMessage;
+  final String? successMessage;
 
-  const ProvincialLoaded(this.recintos);
+  const ProvincialState({
+    this.recintos = const [],
+    this.coordinadores = const [],
+    this.unassignedCoordinadores = const [],
+    this.isLoading = false,
+    this.errorMessage,
+    this.successMessage,
+  });
+
+  ProvincialState copyWith({
+    List<RecintoEntity>? recintos,
+    List<CoordinadorEntity>? coordinadores,
+    List<CoordinadorEntity>? unassignedCoordinadores,
+    bool? isLoading,
+    String? errorMessage,
+    String? successMessage,
+    bool clearError = false,
+    bool clearSuccess = false,
+  }) {
+    return ProvincialState(
+      recintos: recintos ?? this.recintos,
+      coordinadores: coordinadores ?? this.coordinadores,
+      unassignedCoordinadores: unassignedCoordinadores ?? this.unassignedCoordinadores,
+      isLoading: isLoading ?? this.isLoading,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
+    );
+  }
 
   @override
-  List<Object?> get props => [recintos];
-}
-
-class ProvincialError extends ProvincialState {
-  final String message;
-
-  const ProvincialError(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class ProvincialActionSuccess extends ProvincialState {
-  final String message;
-
-  const ProvincialActionSuccess(this.message);
-
-  @override
-  List<Object?> get props => [message];
-}
-
-class ProvincialActionError extends ProvincialState {
-  final String message;
-
-  const ProvincialActionError(this.message);
-
-  @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [
+        recintos,
+        coordinadores,
+        unassignedCoordinadores,
+        isLoading,
+        errorMessage,
+        successMessage,
+      ];
 }

@@ -44,9 +44,9 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
       // Padding para que el teclado no tape el formulario
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 24,
-        right: 24,
-        top: 24,
+        left: 16,
+        right: 16,
+        top: 16,
       ),
       child: Form(
         key: _formKey,
@@ -57,28 +57,28 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
             children: [
               Text(
                 'Nuevo Recinto',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _nombreController,
                 decoration: const InputDecoration(labelText: 'Nombre del Recinto', prefixIcon: Icon(Icons.school)),
                 validator: (v) => v!.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _parroquiaController,
                 decoration: const InputDecoration(labelText: 'Parroquia', prefixIcon: Icon(Icons.map)),
                 validator: (v) => v!.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _cantonController,
                 decoration: const InputDecoration(labelText: 'Cantón', prefixIcon: Icon(Icons.location_city)),
                 validator: (v) => v!.isEmpty ? 'Requerido' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _mesasController,
                 keyboardType: TextInputType.number,
@@ -90,15 +90,15 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _submit,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  child: Text('Guardar Recinto'),
+              const SizedBox(height: 16),
+              SizedBox(
+                height: 44,
+                child: ElevatedButton(
+                  onPressed: _submit,
+                  child: Text('Guardar Recinto', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 14)),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
             ],
           ),
         ),
