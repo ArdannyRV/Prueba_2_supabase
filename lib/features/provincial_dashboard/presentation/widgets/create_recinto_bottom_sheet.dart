@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class CreateRecintoBottomSheet extends StatefulWidget {
   const CreateRecintoBottomSheet({super.key});
@@ -75,8 +76,14 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
               const SizedBox(height: 10),
               TextFormField(
                 controller: _cantonController,
-                decoration: const InputDecoration(labelText: 'Cantón', prefixIcon: Icon(Icons.location_city)),
-                validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                readOnly: true,
+                style: TextStyle(color: Colors.grey.shade600),
+                decoration: InputDecoration(
+                  labelText: 'Cantón',
+                  prefixIcon: const Icon(Icons.location_city),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                ),
               ),
               const SizedBox(height: 10),
               TextFormField(
@@ -92,10 +99,22 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
               ),
               const SizedBox(height: 16),
               SizedBox(
-                height: 44,
+                height: 48,
+                width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _submit,
-                  child: Text('Guardar Recinto', style: Theme.of(context).textTheme.labelLarge?.copyWith(fontSize: 14)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text(
+                    'Guardar Recinto',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

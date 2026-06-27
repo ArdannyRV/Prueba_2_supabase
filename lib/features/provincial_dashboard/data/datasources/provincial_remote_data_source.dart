@@ -199,6 +199,10 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
           .eq('id', recintoId);
 
     } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('duplicate') || msg.contains('unique') || msg.contains('cedula')) {
+        throw Exception('Esta cédula ya está registrada.');
+      }
       throw Exception(e.toString());
     }
   }
@@ -230,6 +234,10 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
         throw Exception('Error al crear usuario: $error');
       }
     } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('duplicate') || msg.contains('unique') || msg.contains('cedula')) {
+        throw Exception('Esta cédula ya está registrada.');
+      }
       throw Exception(e.toString());
     }
   }

@@ -16,6 +16,8 @@ class CoordinadoresListPage extends StatefulWidget {
 }
 
 class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -86,16 +88,47 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
               );
             }
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                bloc.add(const FetchAllCoordinadoresEvent());
-              },
-              child: ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                itemCount: coordinadores.length,
-                itemBuilder: (context, index) {
-                  final coordinador = coordinadores[index];
+            final filtered = coordinadores.where((c) {
+              final q = _searchQuery.toLowerCase();
+              return c.nombreCompleto.toLowerCase().contains(q) ||
+                  (c.cedula ?? '').contains(q);
+            }).toList();
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Buscar por nombre o cédula...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                  ),
+                ),
+                if (filtered.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'No se encontraron coordinadores.',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async => bloc.add(const FetchAllCoordinadoresEvent()),
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final coordinador = filtered[index];
 
                   return Dismissible(
                     key: Key(coordinador.id),
@@ -139,7 +172,7 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                         leading: CircleAvatar(
                           radius: 18,
                           backgroundColor: const Color(0xFFEEF2FF),
@@ -153,7 +186,7 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                               ),
                         ),
                         subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
+                          padding: const EdgeInsets.only(top: 4.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -170,7 +203,7 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: 2),
                               Row(
                                 children: [
                                   Icon(Icons.phone, size: 14, color: Colors.grey.shade600),
@@ -206,7 +239,10 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                   );
                 },
               ),
-            );
+            ),
+          ),
+        ],
+      );
         },
       ),
     ),

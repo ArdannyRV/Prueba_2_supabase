@@ -5,11 +5,30 @@ import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
 import '../bloc/provincial_state.dart';
 import '../widgets/create_recinto_bottom_sheet.dart';
+import '../../domain/entities/recinto_entity.dart';
 import 'recinto_detail_page.dart';
 
-class RecintosListPage extends StatelessWidget {
+class RecintosListPage extends StatefulWidget {
   const RecintosListPage({super.key});
 
+  @override
+  State<RecintosListPage> createState() => _RecintosListPageState();
+}
+
+class _RecintosListPageState extends State<RecintosListPage> {
+  List<RecintoEntity>? _localRecintos;
+  String _searchQuery = '';
+  String? _parroquiaFiltro;
+  
+  static const List<String> _parroquiasQuito = [
+    'Belisario Quevedo','Calderón','Carcelén','Centro Histórico',
+    'Chillogallo','Chimbacalle','Cochapamba','Cotocollao','El Condado',
+    'Guamaní','Iñaquito','Jipijapa','Kennedy','La Concepción',
+    'La Ecuatoriana','La Ferroviaria','La Libertad','La Magdalena',
+    'Las Casas','Llano Chico','Mariscal Sucre','Nayón','Ponceano',
+    'Puengasí','Quitumbe','Solanda','Tumbaco','Turubamba',
+  ];
+  
   void _showCreateRecintoBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -29,9 +48,13 @@ class RecintosListPage extends StatelessWidget {
     final bloc = context.read<ProvincialBloc>();
 
     return BlocListener<ProvincialBloc, ProvincialState>(
-      listenWhen: (previous, current) =>
-          (previous.successMessage != current.successMessage && current.successMessage != null) ||
-          (previous.errorMessage != current.errorMessage && current.errorMessage != null),
+      listenWhen: (previous, current) {
+        if (previous.recintos != current.recintos) {
+          _localRecintos = List.from(current.recintos);
+        }
+        return (previous.successMessage != current.successMessage && current.successMessage != null) ||
+               (previous.errorMessage != current.errorMessage && current.errorMessage != null);
+      },
       listener: (context, state) {
         if (state.successMessage != null) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -53,37 +76,84 @@ class RecintosListPage extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final recintos = state.recintos;
-
-            if (recintos.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.inbox_rounded, size: 64, color: Colors.grey.shade400),
-                    const SizedBox(height: 16),
-                    Text(
-                      'No hay recintos registrados aún.',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey.shade600,
-                          ),
-                    ),
-                  ],
-                ),
-              );
+            if (_localRecintos == null) {
+              _localRecintos = List.from(state.recintos);
             }
+            final recintos = _localRecintos!;
 
-            return RefreshIndicator(
-              onRefresh: () async {
-                bloc.add(const FetchRecintosEvent());
-              },
-              child: ListView.builder(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                itemCount: recintos.length,
-                itemBuilder: (context, index) {
-                  final recinto = recintos[index];
+            final filtered = recintos.where((r) {
+              final q = _searchQuery.toLowerCase();
+              final matchSearch = r.nombre.toLowerCase().contains(q) ||
+                  r.parroquia.toLowerCase().contains(q);
+              final matchParroquia = _parroquiaFiltro == null ||
+                  r.parroquia == _parroquiaFiltro;
+              return matchSearch && matchParroquia;
+            }).toList();
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Buscar recinto o parroquia...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                      filled: true,
+                      fillColor: Colors.white,
+                    ),
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      FilterChip(
+                        label: const Text('Todas', style: TextStyle(fontSize: 11)),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                        selected: _parroquiaFiltro == null,
+                        onSelected: (_) => setState(() => _parroquiaFiltro = null),
+                      ),
+                      ..._parroquiasQuito.map((p) => FilterChip(
+                            label: Text(p, style: const TextStyle(fontSize: 11)),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                            selected: _parroquiaFiltro == p,
+                            onSelected: (_) => setState(() => _parroquiaFiltro = p),
+                          )),
+                    ],
+                  ),
+                ),
+                if (filtered.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'No se encontraron recintos.',
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: () async {
+                        bloc.add(const FetchRecintosEvent());
+                      },
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        itemCount: filtered.length,
+                        itemBuilder: (context, index) {
+                          final recinto = filtered[index];
 
                   return Dismissible(
                     key: Key(recinto.id),
@@ -116,6 +186,9 @@ class RecintosListPage extends StatelessWidget {
                       );
                     },
                     onDismissed: (_) {
+                      setState(() {
+                        _localRecintos!.removeWhere((r) => r.id == recinto.id);
+                      });
                       bloc.add(DeleteRecintoEvent(recintoId: recinto.id));
                     },
                     child: Card(
@@ -127,21 +200,24 @@ class RecintosListPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        minLeadingWidth: 32,
+                        contentPadding: const EdgeInsets.only(left: 10, right: 6, top: 2, bottom: 2),
                         leading: CircleAvatar(
-                          radius: 18,
+                          radius: 16,
                           backgroundColor: const Color(0xFFEEF2FF),
                           child: Icon(Icons.how_to_vote_rounded, size: 16, color: AppTheme.primaryColor),
                         ),
                         title: Text(
                           recinto.nombre,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
                         subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
+                          padding: const EdgeInsets.only(top: 4.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -160,7 +236,7 @@ class RecintosListPage extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: 3),
                               Builder(builder: (context) {
                                 Color statusColor;
                                 if (recinto.mesasConActa == 0) {
@@ -185,10 +261,30 @@ class RecintosListPage extends StatelessWidget {
                                   ],
                                 );
                               }),
+                              const SizedBox(height: 3),
+                              Builder(builder: (context) {
+                                final tieneCoordinador = recinto.coordinadorNombre != null &&
+                                    recinto.coordinadorNombre!.isNotEmpty;
+                                return Row(
+                                  children: [
+                                    Icon(Icons.person, size: 14, color: tieneCoordinador ? Colors.green.shade700 : Colors.red.shade600),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        tieneCoordinador ? recinto.coordinadorNombre! : 'Sin coordinador',
+                                        style: TextStyle(
+                                          fontSize: 11, fontWeight: FontWeight.w600,
+                                          color: tieneCoordinador ? Colors.green.shade700 : Colors.red.shade600,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }),
                             ],
                           ),
                         ),
-                        trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey),
+                        trailing: const Icon(Icons.chevron_right_rounded, color: Colors.grey, size: 18),
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -204,7 +300,10 @@ class RecintosListPage extends StatelessWidget {
                   );
                 },
               ),
-            );
+            ),
+          ),
+        ],
+      );
           },
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -220,3 +319,4 @@ class RecintosListPage extends StatelessWidget {
     );
   }
 }
+

@@ -6,23 +6,43 @@ import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
 import '../widgets/asignar_coordinador_dialog.dart';
 
-class RecintoDetailPage extends StatelessWidget {
+class RecintoDetailPage extends StatefulWidget {
   final RecintoEntity recinto;
 
   const RecintoDetailPage({super.key, required this.recinto});
+
+  @override
+  State<RecintoDetailPage> createState() => _RecintoDetailPageState();
+}
+
+class _RecintoDetailPageState extends State<RecintoDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ProvincialBloc>().stream.listen((state) {
+        if (state.successMessage != null &&
+            state.successMessage!.toLowerCase().contains('asignado') &&
+            mounted) {
+          Navigator.of(context).pop();
+        }
+      });
+    });
+  }
 
   void _showAsignarCoordinadorDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (_) => BlocProvider.value(
         value: context.read<ProvincialBloc>(),
-        child: AsignarCoordinadorDialog(recintoId: recinto.id),
+        child: AsignarCoordinadorDialog(recintoId: widget.recinto.id),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final recinto = widget.recinto;
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
