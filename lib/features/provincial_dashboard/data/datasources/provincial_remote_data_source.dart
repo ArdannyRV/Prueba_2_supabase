@@ -160,7 +160,7 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
     required String correo,
   }) async {
     try {
-      // 1. Validar que el recinto no tenga coordinador
+      // Validar que el recinto no tenga coordinador
       final recinto = await supabaseClient
           .from('recintos')
           .select('coordinador_id')
@@ -171,44 +171,33 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
         throw Exception('Este recinto ya tiene un coordinador asignado.');
       }
 
-      // 2. Crear usuario con instancia secundaria para no perder la sesión actual
-      final secClient = SupabaseClient(
-        AppConstants.supabaseUrl,
-        AppConstants.supabaseAnonKey,
-        authOptions: const AuthClientOptions(
-          autoRefreshToken: false,
-        ),
-      );
-      
-      final authResponse = await secClient.auth.signUp(
-        email: correo,
-        password: 'Ecuador2026',
+      // ✅ Llamar a la Edge Function en vez de crear secClient
+      final response = await supabaseClient.functions.invoke(
+        'create-user',
+        body: {
+          'email': correo,
+          'password': 'Ecuador2026',
+          'cedula': cedula,
+          'nombres': nombres,
+          'apellidos': apellidos,
+          'telefono': telefono,
+          'rol': 'coordinador_recinto',
+        },
       );
 
-      final user = authResponse.user;
-      if (user == null) {
-        throw Exception('No se pudo crear el usuario en Auth.');
+      if (response.status != 200) {
+        final error = response.data['error'] ?? 'Error desconocido';
+        throw Exception('Error al crear usuario: $error');
       }
 
-      // 3. Insertar/Actualizar perfil
-      await supabaseClient.from('perfiles').upsert({
-        'id': user.id,
-        'cedula': cedula,
-        'nombres': nombres,
-        'apellidos': apellidos,
-        'telefono': telefono,
-        'correo': correo,
-        'rol': 'coordinador_recinto',
-        'debe_cambiar_pass': true,
-      });
+      final userId = response.data['userId'];
 
-      // 4. Asignar coordinador al recinto
+      // Asignar coordinador al recinto
       await supabaseClient
           .from('recintos')
-          .update({'coordinador_id': user.id})
+          .update({'coordinador_id': userId})
           .eq('id', recintoId);
-          
-      secClient.dispose();
+
     } catch (e) {
       throw Exception(e.toString());
     }
@@ -223,36 +212,23 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
     required String correo,
   }) async {
     try {
-      // 1. Crear usuario con instancia secundaria
-      final secClient = SupabaseClient(
-        AppConstants.supabaseUrl,
-        AppConstants.supabaseAnonKey,
-        authOptions: const AuthClientOptions(
-          autoRefreshToken: false,
-        ),
-      );
-      
-      final authResponse = await secClient.auth.signUp(
-        email: correo,
-        password: 'Ecuador2026', // Contraseña por defecto pedida
+      final response = await supabaseClient.functions.invoke(
+        'create-user',
+        body: {
+          'email': correo,
+          'password': 'Ecuador2026',
+          'cedula': cedula,
+          'nombres': nombres,
+          'apellidos': apellidos,
+          'telefono': telefono,
+          'rol': 'coordinador_recinto',
+        },
       );
 
-      final user = authResponse.user;
-      if (user == null) {
-        throw Exception('No se pudo crear el usuario en Auth.');
+      if (response.status != 200) {
+        final error = response.data['error'] ?? 'Error desconocido';
+        throw Exception('Error al crear usuario: $error');
       }
-
-      // 2. Actualizar tabla perfiles
-      await supabaseClient.from('perfiles').upsert({
-        'id': user.id,
-        'cedula': cedula,
-        'nombres': nombres,
-        'apellidos': apellidos,
-        'telefono': telefono,
-        'correo': correo,
-        'rol': 'coordinador_recinto',
-        'debe_cambiar_pass': true, // Según petición CRÍTICA
-      });
     } catch (e) {
       throw Exception(e.toString());
     }
