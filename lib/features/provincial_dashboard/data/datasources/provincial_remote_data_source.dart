@@ -101,13 +101,20 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
     try {
       final response = await supabaseClient
           .from('perfiles')
-          .select()
+          .select('*, recintos!coordinador_id(nombre)')
           .eq('rol', 'coordinador_recinto')
           .order('nombres');
 
-      return (response as List)
-          .map((json) => CoordinadorModel.fromJson(json))
-          .toList();
+      return (response as List).map((json) {
+        // Extraer nombre del recinto del join
+        final recintoData = json['recintos'];
+        final recintoNombre = recintoData != null
+            ? (recintoData is List
+                ? (recintoData.isNotEmpty ? recintoData[0]['nombre'] : null)
+                : recintoData['nombre'])
+            : null;
+        return CoordinadorModel.fromJson({...json, 'recinto_nombre': recintoNombre});
+      }).toList();
     } catch (e) {
       throw Exception('Error al obtener coordinadores: $e');
     }

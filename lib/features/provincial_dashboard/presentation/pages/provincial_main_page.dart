@@ -10,6 +10,7 @@ import '../bloc/provincial_event.dart';
 import 'recintos_list_page.dart';
 import 'coordinadores_list_page.dart';
 import 'dashboard_page.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class ProvincialMainPage extends StatefulWidget {
   const ProvincialMainPage({super.key});
@@ -54,15 +55,28 @@ class _ProvincialMainPageState extends State<ProvincialMainPage> {
         child: Scaffold(
           appBar: AppBar(
             elevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.primary,
+            backgroundColor: AppTheme.flagBlue,
             foregroundColor: Colors.white,
             title: Text(
               _getAppBarTitle(_currentIndex),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                     color: Colors.white,
                   ),
+            ),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(3),
+              child: Container(
+                height: 3,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.flagYellow, AppTheme.flagRed],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+              ),
             ),
             actions: [
               IconButton(
@@ -80,22 +94,20 @@ class _ProvincialMainPageState extends State<ProvincialMainPage> {
               DashboardPage(),
             ],
           ),
-          bottomNavigationBar: BottomNavigationBar(
-            currentIndex: _currentIndex,
-            onTap: _onTabTapped,
-            selectedItemColor: Theme.of(context).colorScheme.primary,
-            unselectedItemColor: Colors.grey,
-            showUnselectedLabels: true,
-            items: const [
-              BottomNavigationBarItem(
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: _currentIndex,
+            onDestinationSelected: _onTabTapped,
+            indicatorColor: AppTheme.flagYellow.withOpacity(0.2),
+            destinations: const [
+              NavigationDestination(
                 icon: Icon(Icons.location_city),
                 label: 'Recintos',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.people_alt),
                 label: 'Coordinadores',
               ),
-              BottomNavigationBarItem(
+              NavigationDestination(
                 icon: Icon(Icons.bar_chart),
                 label: 'Dashboard',
               ),

@@ -47,13 +47,26 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        backgroundColor: AppTheme.flagBlue,
         foregroundColor: Colors.white,
         title: Text(
           recinto.nombre,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(3),
+          child: Container(
+            height: 3,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppTheme.flagYellow, AppTheme.flagRed],
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+              ),
+            ),
+          ),
+        ),
       ),
       body: CustomScrollView(
         slivers: [
@@ -64,13 +77,13 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Detalles del Recinto', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  Text('Detalles del Recinto', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.location_on, color: Colors.grey),
                       const SizedBox(width: 8),
-                      Text('${recinto.parroquia}, ${recinto.canton}', style: Theme.of(context).textTheme.bodyLarge),
+                      Text('${recinto.parroquia}, ${recinto.canton}', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -78,18 +91,22 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
                     children: [
                       const Icon(Icons.how_to_vote, color: Colors.grey),
                       const SizedBox(width: 8),
-                      Text('${recinto.mesasConActa} / ${recinto.totalMesas} mesas registradas', style: Theme.of(context).textTheme.bodyLarge),
+                      Text('${recinto.mesasConActa} / ${recinto.totalMesas} mesas registradas', style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontSize: 12)),
                     ],
                   ),
                   const SizedBox(height: 24),
                   if (recinto.coordinadorId == null)
                     SizedBox(
                       width: double.infinity,
-                      height: 48,
+                      height: 36,
                       child: ElevatedButton.icon(
                         onPressed: () => _showAsignarCoordinadorDialog(context),
-                        icon: const Icon(Icons.person_add),
-                        label: const FittedBox(child: Text('Asignar Coordinador')),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.flagBlue,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.person_add, size: 18),
+                        label: const Text('Asignar Coordinador', style: TextStyle(fontSize: 12)),
                       ),
                     )
                   else
@@ -104,16 +121,16 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
                               Icon(Icons.check_circle, color: Colors.green.shade700),
                               const SizedBox(width: 8),
                               Expanded(
-                                child: Text('Coordinador Asignado', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.green.shade800, fontWeight: FontWeight.bold)),
+                                child: Text('Coordinador Asignado', style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Colors.green.shade800, fontSize: 12, fontWeight: FontWeight.w700)),
                               ),
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Text(recinto.coordinadorNombre ?? 'Nombre no disponible', style: Theme.of(context).textTheme.bodyMedium),
+                          Text(recinto.coordinadorNombre ?? 'Nombre no disponible', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 12)),
                           const SizedBox(height: 12),
                           SizedBox(
                             width: double.infinity,
-                            height: 40,
+                            height: 36,
                             child: OutlinedButton.icon(
                               onPressed: () async {
                                 final confirm = await showDialog<bool>(
@@ -142,7 +159,7 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
                                 side: BorderSide(color: Colors.red.shade300),
                                 padding: const EdgeInsets.symmetric(horizontal: 8),
                               ),
-                              label: const FittedBox(child: Text('Desasignar')),
+                              label: const Text('Desasignar', style: TextStyle(fontSize: 12)),
                             ),
                           ),
                         ],
@@ -160,22 +177,30 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final mesa = recinto.mesas[index];
-                  return Card(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(color: AppTheme.borderColor),
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    decoration: BoxDecoration(
+                      border: Border(left: BorderSide(color: mesa.tieneActa ? AppTheme.flagBlue : Colors.grey.shade400, width: 3)),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    margin: const EdgeInsets.only(bottom: 8),
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        side: const BorderSide(color: AppTheme.borderColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      margin: EdgeInsets.zero,
                     child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       leading: CircleAvatar(
+                        radius: 16,
                         backgroundColor: mesa.tieneActa ? Colors.green.shade100 : Colors.grey.shade200,
                         child: Icon(
                           mesa.tieneActa ? Icons.check : Icons.inbox,
                           color: mesa.tieneActa ? Colors.green.shade700 : Colors.grey.shade600,
                         ),
                       ),
-                      title: Text('Mesa ${mesa.numeroMesa}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 14, fontWeight: FontWeight.w600)),
+                      title: Text('Mesa ${mesa.numeroMesa}', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 13, fontWeight: FontWeight.w600)),
                       subtitle: Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Row(
@@ -191,7 +216,7 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: mesa.tieneActa ? Colors.green.shade800 : Colors.orange.shade800,
                                   fontWeight: FontWeight.w600,
-                                  fontSize: 11,
+                                  fontSize: 10,
                                 ),
                               ),
                             ),
@@ -200,7 +225,7 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
                               Expanded(
                                 child: Text(
                                   'GPS: ${mesa.latitud?.toStringAsFixed(5) ?? 'N/A'}, ${mesa.longitud?.toStringAsFixed(5) ?? 'N/A'}',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.blue.shade700, fontSize: 11),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.blue.shade700, fontSize: 10),
                                 ),
                               ),
                             ],
@@ -208,6 +233,7 @@ class _RecintoDetailPageState extends State<RecintoDetailPage> {
                         ),
                       ),
                       trailing: mesa.tieneActa ? const Icon(Icons.receipt_long, color: Colors.green) : null,
+                    ),
                     ),
                   );
                 },

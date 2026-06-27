@@ -75,28 +75,33 @@ class AppTheme {
         ),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: surfaceColor,
-        foregroundColor: textPrimaryColor,
+        backgroundColor: flagBlue,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
         titleTextStyle: GoogleFonts.inter(
-          fontSize: 17,
+          fontSize: 15,
           fontWeight: FontWeight.w700,
-          color: textPrimaryColor,
+          color: Colors.white,
         ),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: flagBlue,
+        unselectedItemColor: Colors.grey,
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           disabledBackgroundColor: primaryColor.withOpacity(0.4),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6),
           ),
           elevation: 0,
           textStyle: GoogleFonts.inter(
-            fontSize: 15,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -141,8 +146,8 @@ class AppTheme {
         filled: true,
         fillColor: surfaceColor,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 16,
+          horizontal: 14,
+          vertical: 12,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(6),
@@ -166,16 +171,16 @@ class AppTheme {
         ),
         labelStyle: GoogleFonts.inter(
           color: textSecondaryColor,
-          fontSize: 14,
+          fontSize: 13,
         ),
         hintStyle: GoogleFonts.inter(
           color: textSecondaryColor.withOpacity(0.6),
-          fontSize: 14,
+          fontSize: 13,
         ),
       ),
       cardTheme: CardThemeData(
         color: surfaceColor,
-        elevation: 0,
+        elevation: 1,
         margin: EdgeInsets.zero,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),

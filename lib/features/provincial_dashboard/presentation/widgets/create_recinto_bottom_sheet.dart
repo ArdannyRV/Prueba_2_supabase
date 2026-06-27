@@ -58,10 +58,18 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
             children: [
               Text(
                 'Nuevo Recinto',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700),
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.flagBlue),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 4),
+              Center(
+                child: Container(
+                  height: 2,
+                  width: 40,
+                  color: AppTheme.flagYellow,
+                ),
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _nombreController,
                 decoration: const InputDecoration(labelText: 'Nombre del Recinto', prefixIcon: Icon(Icons.school)),
@@ -99,13 +107,14 @@ class _CreateRecintoBottomSheetState extends State<CreateRecintoBottomSheet> {
               ),
               const SizedBox(height: 16),
               SizedBox(
-                height: 48,
+                height: 46,
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: _submit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primaryColor,
+                    backgroundColor: AppTheme.flagBlue,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                   ),
                   child: const Text(
                     'Guardar Recinto',

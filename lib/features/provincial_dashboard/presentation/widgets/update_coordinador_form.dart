@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/coordinador_entity.dart';
 import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class UpdateCoordinadorForm extends StatefulWidget {
   final CoordinadorEntity coordinador;
@@ -64,9 +65,23 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Actualizar Coordinador',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Actualizar Coordinador',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.flagBlue,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Container(height: 2, width: 40, color: AppTheme.flagYellow),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -88,9 +103,17 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
               validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submit,
-              child: const Text('Guardar Cambios'),
+            SizedBox(
+              height: 46,
+              child: ElevatedButton(
+                onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.flagBlue,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                ),
+                child: const Text('Guardar Cambios', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+              ),
             ),
             const SizedBox(height: 24),
           ],

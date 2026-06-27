@@ -17,6 +17,9 @@ class CoordinadoresListPage extends StatefulWidget {
 
 class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
   String _searchQuery = '';
+  String _filtroAsignacion = 'todos';
+  int _currentPage = 1;
+  final int _itemsPerPage = 5;
 
   @override
   void initState() {
@@ -90,24 +93,94 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
 
             final filtered = coordinadores.where((c) {
               final q = _searchQuery.toLowerCase();
-              return c.nombreCompleto.toLowerCase().contains(q) ||
+              final matchSearch = c.nombreCompleto.toLowerCase().contains(q) ||
                   (c.cedula ?? '').contains(q);
+              final estaAsignado = c.recintoAsignado != null;
+              final matchFiltro = _filtroAsignacion == 'todos' ||
+                  (_filtroAsignacion == 'asignados' && estaAsignado) ||
+                  (_filtroAsignacion == 'sin_asignar' && !estaAsignado);
+              return matchSearch && matchFiltro;
             }).toList();
+
+            final totalPages = (filtered.length / _itemsPerPage).ceil().clamp(1, 9999);
+            final effectivePage = _currentPage.clamp(1, totalPages);
+            final startIndex = (effectivePage - 1) * _itemsPerPage;
+            final endIndex = (startIndex + _itemsPerPage).clamp(0, filtered.length);
+            final paginated = filtered.sublist(startIndex, endIndex);
 
             return Column(
               children: [
+
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Buscar por nombre o cédula...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    onChanged: (v) => setState(() => _searchQuery = v),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Buscar por nombre o cédula...',
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          onChanged: (v) => setState(() {
+                            _searchQuery = v;
+                            _currentPage = 1;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 48,
+                        width: 48,
+                        child: ElevatedButton(
+                          onPressed: _showCreateCoordinadorForm,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          child: const Icon(Icons.person_add_rounded, size: 22),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                  child: Row(
+                    children: [
+                      for (final opcion in [
+                        ('todos', 'Todos'),
+                        ('asignados', 'Asignados'),
+                        ('sin_asignar', 'Sin asignar'),
+                      ])
+                        Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: FilterChip(
+                            label: Text(opcion.$2, style: const TextStyle(fontSize: 11)),
+                            selected: _filtroAsignacion == opcion.$1,
+                            onSelected: (_) => setState(() {
+                              _filtroAsignacion = opcion.$1;
+                              _currentPage = 1;
+                            }),
+                            selectedColor: AppTheme.flagYellow,
+                            checkmarkColor: AppTheme.flagBlue,
+                            labelStyle: TextStyle(
+                              color: _filtroAsignacion == opcion.$1 ? AppTheme.flagBlue : Colors.black87,
+                              fontSize: 11, fontWeight: FontWeight.w600,
+                            ),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
                 if (filtered.isEmpty)
@@ -121,21 +194,24 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                   )
                 else
                   Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () async => bloc.add(const FetchAllCoordinadoresEvent()),
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final coordinador = filtered[index];
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: () async => bloc.add(const FetchAllCoordinadoresEvent()),
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              itemCount: paginated.length,
+                              itemBuilder: (context, index) {
+                                final coordinador = paginated[index];
 
                   return Dismissible(
                     key: Key(coordinador.id),
-                    direction: DismissDirection.endToStart,
+                    direction: DismissDirection.startToEnd,
                     background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 20),
                       decoration: BoxDecoration(
                         color: Colors.red.shade700,
                         borderRadius: BorderRadius.circular(6),
@@ -163,8 +239,14 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                     onDismissed: (_) {
                       bloc.add(DeleteCoordinadorEvent(coordinadorId: coordinador.id));
                     },
-                    child: Card(
+                    child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        border: Border(left: BorderSide(color: (coordinador.recintoAsignado != null) ? AppTheme.flagBlue : AppTheme.flagRed, width: 3)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Card(
+                      margin: EdgeInsets.zero,
                       elevation: 2,
                       shadowColor: Colors.black12,
                       shape: RoundedRectangleBorder(
@@ -206,11 +288,11 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                               const SizedBox(height: 2),
                               Row(
                                 children: [
-                                  Icon(Icons.phone, size: 14, color: Colors.grey.shade600),
+                                  Icon(Icons.home_work_outlined, size: 14, color: Colors.grey.shade600),
                                   const SizedBox(width: 4),
                                   Text(
-                                    coordinador.telefono ?? 'Sin teléfono',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    coordinador.recintoAsignado ?? 'Sin asignar',
+                                    style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade600,
                                         ),
@@ -236,24 +318,50 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                         },
                       ),
                     ),
+                    ),
                   );
-                },
+                        },
+                      ),
+                    ),
+                  ),
+                  if (totalPages > 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            iconSize: 20,
+                            icon: const Icon(Icons.chevron_left),
+                            onPressed: effectivePage > 1
+                                ? () => setState(() => _currentPage = effectivePage - 1)
+                                : null,
+                          ),
+                          Text(
+                            'Página $effectivePage de $totalPages',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          IconButton(
+                            iconSize: 20,
+                            icon: const Icon(Icons.chevron_right),
+                            onPressed: effectivePage < totalPages
+                                ? () => setState(() => _currentPage = effectivePage + 1)
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
         ],
       );
         },
       ),
-    ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showCreateCoordinadorForm,
-        backgroundColor: AppTheme.primaryColor,
-        icon: const Icon(Icons.person_add_rounded, color: Colors.white),
-        label: Text(
-          'Nuevo Coordinador',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.white),
-        ),
       ),
     );
   }

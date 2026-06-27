@@ -19,6 +19,8 @@ class _RecintosListPageState extends State<RecintosListPage> {
   List<RecintoEntity>? _localRecintos;
   String _searchQuery = '';
   String? _parroquiaFiltro;
+  int _currentPage = 1;
+  final int _itemsPerPage = 4;
   
   static const List<String> _parroquiasQuito = [
     'Belisario Quevedo','Calderón','Carcelén','Centro Histórico',
@@ -90,20 +92,53 @@ class _RecintosListPageState extends State<RecintosListPage> {
               return matchSearch && matchParroquia;
             }).toList();
 
+            final totalPages = (filtered.length / _itemsPerPage).ceil().clamp(1, 9999);
+            final effectivePage = _currentPage.clamp(1, totalPages);
+            final startIndex = (effectivePage - 1) * _itemsPerPage;
+            final endIndex = (startIndex + _itemsPerPage).clamp(0, filtered.length);
+            final paginated = filtered.sublist(startIndex, endIndex);
+
             return Column(
               children: [
+
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Buscar recinto o parroquia...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    onChanged: (v) => setState(() => _searchQuery = v),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Buscar recinto o parroquia...',
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          onChanged: (v) => setState(() {
+                            _searchQuery = v;
+                            _currentPage = 1;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 48,
+                        width: 48,
+                        child: ElevatedButton(
+                          onPressed: () => _showCreateRecintoBottomSheet(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          child: const Icon(Icons.add_business_rounded, size: 22),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SingleChildScrollView(
@@ -113,22 +148,36 @@ class _RecintosListPageState extends State<RecintosListPage> {
                     spacing: 8,
                     children: [
                       FilterChip(
-                        label: const Text('Todas', style: TextStyle(fontSize: 11)),
+                        label: Text('Todas', style: _parroquiaFiltro == null ? const TextStyle(color: AppTheme.flagBlue, fontSize: 11, fontWeight: FontWeight.w600) : const TextStyle(color: Colors.black, fontSize: 11)),
+                        selectedColor: AppTheme.flagYellow,
+                        checkmarkColor: AppTheme.flagBlue,
+                        backgroundColor: Colors.white,
+                        side: const BorderSide(color: AppTheme.flagBlue, width: 0.8),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                         labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                         selected: _parroquiaFiltro == null,
-                        onSelected: (_) => setState(() => _parroquiaFiltro = null),
+                        onSelected: (_) => setState(() {
+                          _parroquiaFiltro = null;
+                          _currentPage = 1;
+                        }),
                       ),
                       ..._parroquiasQuito.map((p) => FilterChip(
-                            label: Text(p, style: const TextStyle(fontSize: 11)),
+                            label: Text(p, style: _parroquiaFiltro == p ? const TextStyle(color: AppTheme.flagBlue, fontSize: 11, fontWeight: FontWeight.w600) : const TextStyle(color: Colors.black, fontSize: 11)),
+                            selectedColor: AppTheme.flagYellow,
+                            checkmarkColor: AppTheme.flagBlue,
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: AppTheme.flagBlue, width: 0.8),
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
                             padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
                             labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                             selected: _parroquiaFiltro == p,
-                            onSelected: (_) => setState(() => _parroquiaFiltro = p),
+                            onSelected: (_) => setState(() {
+                              _parroquiaFiltro = p;
+                              _currentPage = 1;
+                            }),
                           )),
                     ],
                   ),
@@ -144,23 +193,26 @@ class _RecintosListPageState extends State<RecintosListPage> {
                   )
                 else
                   Expanded(
-                    child: RefreshIndicator(
-                      onRefresh: () async {
-                        bloc.add(const FetchRecintosEvent());
-                      },
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        itemCount: filtered.length,
-                        itemBuilder: (context, index) {
-                          final recinto = filtered[index];
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: () async {
+                              bloc.add(const FetchRecintosEvent());
+                            },
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              itemCount: paginated.length,
+                              itemBuilder: (context, index) {
+                                final recinto = paginated[index];
 
                   return Dismissible(
                     key: Key(recinto.id),
-                    direction: DismissDirection.endToStart,
+                    direction: DismissDirection.startToEnd,
                     background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 20),
                       decoration: BoxDecoration(
                         color: Colors.red.shade700,
                         borderRadius: BorderRadius.circular(6),
@@ -191,8 +243,14 @@ class _RecintosListPageState extends State<RecintosListPage> {
                       });
                       bloc.add(DeleteRecintoEvent(recintoId: recinto.id));
                     },
-                    child: Card(
+                    child: Container(
                       margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        border: Border(left: BorderSide(color: (recinto.coordinadorNombre != null && recinto.coordinadorNombre!.isNotEmpty) ? AppTheme.flagBlue : AppTheme.flagRed, width: 3)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Card(
+                      margin: EdgeInsets.zero,
                       elevation: 2,
                       shadowColor: Colors.black12,
                       shape: RoundedRectangleBorder(
@@ -240,7 +298,7 @@ class _RecintosListPageState extends State<RecintosListPage> {
                               Builder(builder: (context) {
                                 Color statusColor;
                                 if (recinto.mesasConActa == 0) {
-                                  statusColor = Colors.orange.shade700;
+                                  statusColor = Colors.grey.shade600;
                                 } else if (recinto.mesasConActa == recinto.totalMesas) {
                                   statusColor = const Color(0xFF1B7A3D);
                                 } else {
@@ -297,23 +355,49 @@ class _RecintosListPageState extends State<RecintosListPage> {
                         },
                       ),
                     ),
+                    ),
                   );
-                },
+                        },
+                      ),
+                    ),
+                  ),
+                  if (totalPages > 1)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          IconButton(
+                            iconSize: 20,
+                            icon: const Icon(Icons.chevron_left),
+                            onPressed: effectivePage > 1
+                                ? () => setState(() => _currentPage = effectivePage - 1)
+                                : null,
+                          ),
+                          Text(
+                            'Página $effectivePage de $totalPages',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          IconButton(
+                            iconSize: 20,
+                            icon: const Icon(Icons.chevron_right),
+                            onPressed: effectivePage < totalPages
+                                ? () => setState(() => _currentPage = effectivePage + 1)
+                                : null,
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
         ],
       );
           },
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => _showCreateRecintoBottomSheet(context),
-          backgroundColor: AppTheme.primaryColor,
-          icon: const Icon(Icons.add_business_rounded, color: Colors.white),
-          label: Text(
-            'Nuevo Recinto',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600, color: Colors.white),
-          ),
         ),
       ),
     );

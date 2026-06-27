@@ -8,6 +8,7 @@ class CoordinadorEntity extends Equatable {
   final String? telefono;
   final String? correo;
   final bool? debeCambiarPass;
+  final String? recintoAsignado; // nombre del recinto o null
 
   const CoordinadorEntity({
     required this.id,
@@ -17,6 +18,7 @@ class CoordinadorEntity extends Equatable {
     this.telefono,
     this.correo,
     this.debeCambiarPass,
+    this.recintoAsignado,
   });
 
   String get nombreCompleto => '${nombres ?? ''} ${apellidos ?? ''}'.trim();
@@ -30,5 +32,6 @@ class CoordinadorEntity extends Equatable {
         telefono,
         correo,
         debeCambiarPass,
+        recintoAsignado,
       ];
 }

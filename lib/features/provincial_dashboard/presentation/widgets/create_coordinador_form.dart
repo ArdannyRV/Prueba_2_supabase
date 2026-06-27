@@ -81,13 +81,21 @@ class _CreateCoordinadorFormState extends State<CreateCoordinadorForm> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Nuevo Coordinador', style: Theme.of(context).textTheme.titleLarge),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                  Text(
+                    'Nuevo Coordinador',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.flagBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Center(
+                    child: Container(height: 2, width: 40, color: AppTheme.flagYellow),
                   ),
                 ],
               ),
@@ -150,11 +158,15 @@ class _CreateCoordinadorFormState extends State<CreateCoordinadorForm> {
               ),
               const SizedBox(height: 24),
               SizedBox(
-                height: 50,
+                height: 46,
                 child: ElevatedButton(
                   onPressed: _submit,
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
-                  child: const Text('Crear Coordinador', style: TextStyle(color: Colors.white, fontSize: 16)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.flagBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  ),
+                  child: const Text('Crear Coordinador', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
                 ),
               ),
               const SizedBox(height: 24),

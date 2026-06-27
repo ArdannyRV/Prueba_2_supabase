@@ -9,6 +9,7 @@ class CoordinadorModel extends CoordinadorEntity {
     super.telefono,
     super.correo,
     super.debeCambiarPass,
+    super.recintoAsignado,
   });
 
   factory CoordinadorModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +21,7 @@ class CoordinadorModel extends CoordinadorEntity {
       telefono: json['telefono'],
       correo: json['correo'],
       debeCambiarPass: json['debe_cambiar_pass'],
+      recintoAsignado: json['recinto_nombre'],
     );
   }
 
