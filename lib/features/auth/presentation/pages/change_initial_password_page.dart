@@ -7,6 +7,10 @@ import '../bloc/auth_state.dart';
 import '../widgets/flag_stripe.dart';
 import '../widgets/icon_badge.dart';
 import 'login_page.dart';
+import '../../../../core/widgets/feedback_snackbar.dart';
+import '../../../provincial_dashboard/presentation/pages/provincial_main_page.dart';
+import '../../../recinto_dashboard/presentation/pages/recinto_dashboard_page.dart';
+import '../../../veedor_dashboard/presentation/pages/veedor_dashboard_page.dart';
 
 class ChangeInitialPasswordPage extends StatefulWidget {
   const ChangeInitialPasswordPage({super.key});
@@ -52,11 +56,49 @@ class _ChangeInitialPasswordPageState
           .update({'debe_cambiar_pass': false})
           .eq('id', userId);
 
+      // Obtener el rol para redirigir correctamente
+      final perfil = await supabase
+          .from('perfiles')
+          .select('rol')
+          .eq('id', userId)
+          .single();
+
+      final rol = perfil['rol'] as String?;
+
       if (mounted) {
-        context.read<AuthBloc>().add(const SignOutRequested());
+        FeedbackSnackbar.showSuccess(context, '¡Contraseña actualizada exitosamente!');
+        await Future.delayed(const Duration(milliseconds: 800));
+      }
+
+      if (mounted) {
+        Widget destino;
+        switch (rol) {
+          case 'coordinador_provincial':
+            destino = const ProvincialMainPage();
+            break;
+          case 'coordinador_recinto':
+            destino = const RecintoDashboardPage();
+            break;
+          case 'veedor':
+            destino = const VeedorDashboardPage();
+            break;
+          default:
+            destino = const LoginPage();
+        }
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => destino),
+          (route) => false,
+        );
       }
     } catch (e) {
-      setState(() { _error = 'Error: $e'; });
+      final msg = e.toString().replaceAll('Exception: ', '');
+      if (mounted) {
+        FeedbackSnackbar.showError(context, msg);
+        await Future.delayed(const Duration(milliseconds: 1200));
+        if (mounted) {
+          context.read<AuthBloc>().add(const SignOutRequested());
+        }
+      }
     } finally {
       if (mounted) setState(() { _loading = false; });
     }
@@ -64,17 +106,8 @@ class _ChangeInitialPasswordPageState
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthUnauthenticated) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-          );
-        }
-      },
-      child: Scaffold(
-        body: SafeArea(
+    return Scaffold(
+      body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Form(
@@ -168,7 +201,6 @@ class _ChangeInitialPasswordPageState
               ),
             ),
           ),
-        ),
       ),
     );
   }
