@@ -40,7 +40,7 @@ class VeedorRemoteDataSource {
 
   // Subir foto a Supabase Storage bucket 'actas-fotos'
   Future<String> subirFoto(String mesaId, String dignidad, List<int> bytes) async {
-    final path = 'actas/$mesaId/$dignidad/${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final path = 'actas/$mesaId/$dignidad/acta.jpg';
     await supabaseClient.storage.from('actas-fotos').uploadBinary(
       path,
       Uint8List.fromList(bytes),

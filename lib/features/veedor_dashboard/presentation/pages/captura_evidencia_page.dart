@@ -95,6 +95,33 @@ class _CapturaEvidenciaPageState extends State<CapturaEvidenciaPage> {
     }
   }
 
+  Future<void> _abrirGaleria() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+
+    setState(() {
+      _validandoNitidez = true;
+      _foto = File(picked.path);
+      _nitidezScore = null;
+    });
+
+    final score = await _calcularNitidez(_foto!);
+
+    if (mounted) {
+      setState(() {
+        _nitidezScore = score;
+        _validandoNitidez = false;
+      });
+
+      if (score < 50) {
+        FeedbackSnackbar.showError(context, 'Foto borrosa (nitidez: ${score.toStringAsFixed(1)}). Por favor selecciona otra foto más nítida.');
+      } else {
+        FeedbackSnackbar.showSuccess(context, 'Foto aceptada ✓ (nitidez: ${score.toStringAsFixed(1)})');
+      }
+    }
+  }
+
   Future<void> _guardar() async {
     setState(() => _guardando = true);
     try {
@@ -195,14 +222,32 @@ class _CapturaEvidenciaPageState extends State<CapturaEvidenciaPage> {
                     ),
             ),
             const SizedBox(height: 24),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.camera_alt),
-              label: Text(_foto == null ? 'Tomar foto del acta' : 'Retomar foto'),
-              onPressed: _guardando ? null : _tomarFoto,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                side: const BorderSide(color: AppTheme.flagBlue, width: 2),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.camera_alt),
+                    label: Text(_foto == null ? 'Cámara' : 'Retomar'),
+                    onPressed: _guardando ? null : _tomarFoto,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: AppTheme.flagBlue, width: 2),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.photo_library),
+                    label: const Text('Galería'),
+                    onPressed: _guardando ? null : _abrirGaleria,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      side: const BorderSide(color: AppTheme.flagBlue, width: 2),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 24),
             if (_validandoNitidez)

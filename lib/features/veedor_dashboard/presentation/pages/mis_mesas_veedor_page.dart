@@ -90,9 +90,15 @@ class MisMesasVeedorPage extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            _buildStatusChip('Alcaldía', mesa.tieneActaAlcaldia),
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: _buildStatusChip('Alcaldía', mesa.tieneActaAlcaldia),
+                            ),
                             const SizedBox(width: 8),
-                            _buildStatusChip('Prefectura', mesa.tieneActaPrefectura),
+                            Flexible(
+                              fit: FlexFit.loose,
+                              child: _buildStatusChip('Prefectura', mesa.tieneActaPrefectura),
+                            ),
                           ],
                         ),
                       ],
@@ -136,12 +142,16 @@ class MisMesasVeedorPage extends StatelessWidget {
             color: isDone ? Colors.green : Colors.grey.shade600,
           ),
           const SizedBox(width: 4),
-          Text(
-            '$title ${isDone ? '✓' : 'pendiente'}',
-            style: TextStyle(
-              fontSize: 10,
-              color: isDone ? Colors.green.shade700 : Colors.grey.shade700,
-              fontWeight: isDone ? FontWeight.w600 : FontWeight.normal,
+          Flexible(
+            child: Text(
+              '$title ${isDone ? '✓' : 'pendiente'}',
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDone ? Colors.green.shade700 : Colors.grey.shade700,
+                fontWeight: isDone ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
           ),
         ],
