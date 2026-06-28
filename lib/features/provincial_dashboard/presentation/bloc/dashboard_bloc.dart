@@ -18,8 +18,8 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
   ) async {
     emit(DashboardLoading());
 
-    final alcaldeResult = await getResultadosPorCargo('alcalde');
-    final prefectoResult = await getResultadosPorCargo('prefecto');
+    final alcaldeResult = await getResultadosPorCargo('alcaldia');
+    final prefectoResult = await getResultadosPorCargo('prefectura');
 
     alcaldeResult.fold(
       (error) => emit(DashboardError(error)),

@@ -16,10 +16,11 @@ class CoordinadoresListPage extends StatefulWidget {
 }
 
 class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
+  List<CoordinadorEntity>? _localCoordinadores;
   String _searchQuery = '';
   String _filtroAsignacion = 'todos';
   int _currentPage = 1;
-  final int _itemsPerPage = 5;
+  final int _itemsPerPage = 8;
 
   @override
   void initState() {
@@ -48,14 +49,21 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       body: BlocListener<ProvincialBloc, ProvincialState>(
-        listenWhen: (previous, current) =>
-            (previous.successMessage != current.successMessage && current.successMessage != null) ||
-            (previous.errorMessage != current.errorMessage && current.errorMessage != null),
+        listenWhen: (previous, current) {
+          if (previous.coordinadores != current.coordinadores) {
+            _localCoordinadores = List.from(current.coordinadores);
+          }
+          return (previous.successMessage != current.successMessage && current.successMessage != null) ||
+              (previous.errorMessage != current.errorMessage && current.errorMessage != null);
+        },
         listener: (context, state) {
           if (state.successMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.successMessage!),
-              backgroundColor: Colors.green,
+              content: Text(
+                state.successMessage!,
+                style: const TextStyle(color: AppTheme.flagBlue, fontWeight: FontWeight.w600),
+              ),
+              backgroundColor: AppTheme.flagYellow,
             ));
           } else if (state.errorMessage != null) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -70,7 +78,10 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final coordinadores = state.coordinadores;
+          if (_localCoordinadores == null) {
+            _localCoordinadores = List.from(state.coordinadores);
+          }
+          final coordinadores = _localCoordinadores!;
 
           if (coordinadores.isEmpty) {
               return Center(
@@ -151,8 +162,9 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     children: [
                       for (final opcion in [
@@ -163,7 +175,11 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                         Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: FilterChip(
-                            label: Text(opcion.$2, style: const TextStyle(fontSize: 11)),
+                            label: Text(opcion.$2, style: TextStyle(
+                              color: _filtroAsignacion == opcion.$1 ? AppTheme.flagBlue : Colors.black,
+                              fontSize: 11,
+                              fontWeight: _filtroAsignacion == opcion.$1 ? FontWeight.w600 : FontWeight.normal,
+                            )),
                             selected: _filtroAsignacion == opcion.$1,
                             onSelected: (_) => setState(() {
                               _filtroAsignacion = opcion.$1;
@@ -171,13 +187,12 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                             }),
                             selectedColor: AppTheme.flagYellow,
                             checkmarkColor: AppTheme.flagBlue,
-                            labelStyle: TextStyle(
-                              color: _filtroAsignacion == opcion.$1 ? AppTheme.flagBlue : Colors.black87,
-                              fontSize: 11, fontWeight: FontWeight.w600,
-                            ),
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: AppTheme.flagBlue, width: 0.8),
                             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                           ),
                         ),
                     ],
@@ -237,6 +252,9 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                       );
                     },
                     onDismissed: (_) {
+                      setState(() {
+                        _localCoordinadores?.removeWhere((c) => c.id == coordinador.id);
+                      });
                       bloc.add(DeleteCoordinadorEvent(coordinadorId: coordinador.id));
                     },
                     child: Container(
@@ -254,7 +272,7 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 0),
                         leading: CircleAvatar(
                           radius: 18,
                           backgroundColor: const Color(0xFFEEF2FF),
@@ -285,7 +303,7 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 2),
+                              const SizedBox(height: 1),
                               Row(
                                 children: [
                                   Icon(Icons.home_work_outlined, size: 14, color: Colors.grey.shade600),
@@ -326,7 +344,7 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
                   ),
                   if (totalPages > 1)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [

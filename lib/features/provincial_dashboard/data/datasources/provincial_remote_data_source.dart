@@ -207,10 +207,10 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
 
     } catch (e) {
       final msg = e.toString();
-      if (msg.contains('duplicate') || msg.contains('unique') || msg.contains('cedula')) {
-        throw Exception('Esta cédula ya está registrada.');
+      if (msg.contains('Esta cédula ya está registrada') || msg.contains('cedula') || msg.contains('duplicate') || msg.contains('unique')) {
+        throw Exception('Esta cédula ya está en uso');
       }
-      throw Exception(e.toString());
+      throw Exception(msg);
     }
   }
 
@@ -242,10 +242,10 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
       }
     } catch (e) {
       final msg = e.toString();
-      if (msg.contains('duplicate') || msg.contains('unique') || msg.contains('cedula')) {
-        throw Exception('Esta cédula ya está registrada.');
+      if (msg.contains('Esta cédula ya está registrada') || msg.contains('cedula') || msg.contains('duplicate') || msg.contains('unique')) {
+        throw Exception('Esta cédula ya está en uso');
       }
-      throw Exception(e.toString());
+      throw Exception(msg);
     }
   }
 
@@ -270,11 +270,15 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
   @override
   Future<void> deleteCoordinador(String coordinadorId) async {
     try {
-      // Nota: Eliminar un usuario completamente requiere Supabase Admin API.
-      // Si no tenemos admin API, eliminaremos solo el perfil o le cambiaremos el rol.
-      // El requerimiento decía "Eliminar en Supabase", así que borramos de 'perfiles' por ahora.
-      // (O puede fallar si hay llave foránea. Lo ideal es desactivarlo).
-      await supabaseClient.from('perfiles').delete().eq('id', coordinadorId);
+      final response = await supabaseClient.functions.invoke(
+        'delete-user',
+        body: {'userId': coordinadorId},
+      );
+
+      if (response.status != 200) {
+        final error = response.data['error'] ?? 'Error desconocido';
+        throw Exception('Error al eliminar usuario: $error');
+      }
     } catch (e) {
       throw Exception('Error al eliminar coordinador: $e');
     }

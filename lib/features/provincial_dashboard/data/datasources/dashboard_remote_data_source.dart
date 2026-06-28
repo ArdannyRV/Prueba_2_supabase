@@ -19,7 +19,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final response = await supabaseClient
           .from('candidatos')
           .select('*, votos_candidatos(*)')
-          .eq('cargo', cargo);
+          .eq('dignidad', cargo);
 
       final List<ResultadoVotoEntity> resultados = [];
 
@@ -30,7 +30,7 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         int totalVotos = 0;
         
         for (var votoData in votosCandidatosData) {
-          totalVotos += (votoData['votos'] as int? ?? 0);
+          totalVotos += (votoData['cantidad'] as int? ?? 0);
         }
 
         resultados.add(ResultadoVotoEntity(

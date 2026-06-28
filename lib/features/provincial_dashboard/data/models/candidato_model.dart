@@ -12,9 +12,9 @@ class CandidatoModel extends CandidatoEntity {
   factory CandidatoModel.fromJson(Map<String, dynamic> json) {
     return CandidatoModel(
       id: json['id'],
-      nombre: json['nombre'] ?? 'Desconocido',
-      partido: json['partido'] ?? 'Independiente',
-      cargo: json['cargo'] ?? 'Desconocido',
+      nombre: json['nombre_candidato'] ?? 'Desconocido',
+      partido: json['organizacion_politica'] ?? 'Independiente',
+      cargo: json['dignidad'] ?? 'Desconocido',
       fotoUrl: json['foto_url'],
     );
   }

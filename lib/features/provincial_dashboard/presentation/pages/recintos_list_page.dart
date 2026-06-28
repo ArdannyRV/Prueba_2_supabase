@@ -148,7 +148,7 @@ class _RecintosListPageState extends State<RecintosListPage> {
                     spacing: 8,
                     children: [
                       FilterChip(
-                        label: Text('Todas', style: _parroquiaFiltro == null ? const TextStyle(color: AppTheme.flagBlue, fontSize: 11, fontWeight: FontWeight.w600) : const TextStyle(color: Colors.black, fontSize: 11)),
+                        label: Text('Todos', style: _parroquiaFiltro == null ? const TextStyle(color: AppTheme.flagBlue, fontSize: 11, fontWeight: FontWeight.w600) : const TextStyle(color: Colors.black, fontSize: 11)),
                         selectedColor: AppTheme.flagYellow,
                         checkmarkColor: AppTheme.flagBlue,
                         backgroundColor: Colors.white,
@@ -259,7 +259,7 @@ class _RecintosListPageState extends State<RecintosListPage> {
                       ),
                       child: ListTile(
                         minLeadingWidth: 32,
-                        contentPadding: const EdgeInsets.only(left: 10, right: 6, top: 2, bottom: 2),
+                        contentPadding: const EdgeInsets.only(left: 10, right: 6, top: 0, bottom: 0),
                         leading: CircleAvatar(
                           radius: 16,
                           backgroundColor: const Color(0xFFEEF2FF),
@@ -294,7 +294,7 @@ class _RecintosListPageState extends State<RecintosListPage> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 1),
                               Builder(builder: (context) {
                                 Color statusColor;
                                 if (recinto.mesasConActa == 0) {
@@ -319,7 +319,7 @@ class _RecintosListPageState extends State<RecintosListPage> {
                                   ],
                                 );
                               }),
-                              const SizedBox(height: 3),
+                              const SizedBox(height: 1),
                               Builder(builder: (context) {
                                 final tieneCoordinador = recinto.coordinadorNombre != null &&
                                     recinto.coordinadorNombre!.isNotEmpty;
@@ -363,7 +363,7 @@ class _RecintosListPageState extends State<RecintosListPage> {
                   ),
                   if (totalPages > 1)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
