@@ -17,7 +17,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       final result = await remoteDataSource.getRecintos();
       return Right(result);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -27,7 +27,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       final result = await remoteDataSource.getUnassignedCoordinadores();
       return Right(result);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -37,7 +37,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       final result = await remoteDataSource.getAllCoordinadores();
       return Right(result);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -57,7 +57,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -81,7 +81,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -103,7 +103,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -123,7 +123,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       );
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -133,7 +133,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       await remoteDataSource.deleteCoordinador(coordinadorId);
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -143,7 +143,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       await remoteDataSource.asignarCoordinador(recintoId, coordinadorId);
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -153,7 +153,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       await remoteDataSource.deleteRecinto(recintoId);
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -163,7 +163,7 @@ class ProvincialRepositoryImpl implements ProvincialRepository {
       await remoteDataSource.desasignarCoordinador(recintoId);
       return const Right(null);
     } catch (e) {
-      return Left(e.toString());
+      return Left(e.toString().replaceAll('Exception: ', ''));
     }
   }
 }

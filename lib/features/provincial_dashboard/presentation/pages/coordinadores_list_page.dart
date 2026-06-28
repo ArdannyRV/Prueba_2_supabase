@@ -7,6 +7,7 @@ import '../bloc/provincial_state.dart';
 import '../widgets/create_coordinador_form.dart';
 import '../widgets/update_coordinador_form.dart';
 import '../../domain/entities/coordinador_entity.dart';
+import '../../../../core/widgets/feedback_snackbar.dart';
 
 class CoordinadoresListPage extends StatefulWidget {
   const CoordinadoresListPage({super.key});
@@ -58,18 +59,9 @@ class _CoordinadoresListPageState extends State<CoordinadoresListPage> {
         },
         listener: (context, state) {
           if (state.successMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(
-                state.successMessage!,
-                style: const TextStyle(color: AppTheme.flagBlue, fontWeight: FontWeight.w600),
-              ),
-              backgroundColor: AppTheme.flagYellow,
-            ));
+            FeedbackSnackbar.showSuccess(context, state.successMessage!);
           } else if (state.errorMessage != null) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.errorMessage!),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ));
+            FeedbackSnackbar.showError(context, state.errorMessage!);
           }
         },
         child: BlocBuilder<ProvincialBloc, ProvincialState>(

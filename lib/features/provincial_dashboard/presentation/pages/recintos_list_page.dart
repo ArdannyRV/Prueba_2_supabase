@@ -7,6 +7,7 @@ import '../bloc/provincial_state.dart';
 import '../widgets/create_recinto_bottom_sheet.dart';
 import '../../domain/entities/recinto_entity.dart';
 import 'recinto_detail_page.dart';
+import '../../../../core/widgets/feedback_snackbar.dart';
 
 class RecintosListPage extends StatefulWidget {
   const RecintosListPage({super.key});
@@ -59,15 +60,9 @@ class _RecintosListPageState extends State<RecintosListPage> {
       },
       listener: (context, state) {
         if (state.successMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.successMessage!),
-            backgroundColor: Colors.green,
-          ));
+          FeedbackSnackbar.showSuccess(context, state.successMessage!);
         } else if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(state.errorMessage!),
-            backgroundColor: Theme.of(context).colorScheme.error,
-          ));
+          FeedbackSnackbar.showError(context, state.errorMessage!);
         }
       },
       child: Scaffold(
