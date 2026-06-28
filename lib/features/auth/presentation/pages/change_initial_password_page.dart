@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import '../widgets/flag_stripe.dart';
+import '../widgets/icon_badge.dart';
 import 'login_page.dart';
 
 class ChangeInitialPasswordPage extends StatefulWidget {
@@ -29,6 +31,10 @@ class _ChangeInitialPasswordPageState
     super.dispose();
   }
 
+  void _goBackToLogin() {
+    context.read<AuthBloc>().add(const SignOutRequested());
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _loading = true; _error = null; });
@@ -36,19 +42,16 @@ class _ChangeInitialPasswordPageState
     try {
       final supabase = Supabase.instance.client;
 
-      // 1. Cambiar la contraseña en Supabase Auth
       await supabase.auth.updateUser(
         UserAttributes(password: _newPasswordController.text.trim()),
       );
 
-      // 2. Marcar debe_cambiar_pass = false en perfiles
       final userId = supabase.auth.currentUser!.id;
       await supabase
           .from('perfiles')
           .update({'debe_cambiar_pass': false})
           .eq('id', userId);
 
-      // 3. Cerrar sesión para que vuelva a loguear con la nueva contraseña
       if (mounted) {
         context.read<AuthBloc>().add(const SignOutRequested());
       }
@@ -71,62 +74,98 @@ class _ChangeInitialPasswordPageState
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Cambiar Contraseña Inicial')),
-        body: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.lock_reset_rounded, size: 64, color: Colors.indigo),
-                const SizedBox(height: 16),
-                const Text(
-                  'Por seguridad, debes cambiar tu contraseña antes de continuar.',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 32),
-                TextFormField(
-                  controller: _newPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Nueva contraseña',
-                    prefixIcon: Icon(Icons.lock_outline),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Franja tricolor igual que login
+                  const FlagStripe(),
+                  const SizedBox(height: 16),
+
+                  // Flecha volver (esquina izquierda)
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: _loading ? null : _goBackToLogin,
+                      icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+                      label: const Text('Volver al login'),
+                    ),
                   ),
-                  validator: (v) {
-                    if (v == null || v.length < 6) return 'Mínimo 6 caracteres';
-                    if (v == 'Ecuador2026') return 'No puedes reusar la contraseña inicial';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _confirmController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Confirmar contraseña',
-                    prefixIcon: Icon(Icons.lock_outline),
+                  const SizedBox(height: 16),
+
+                  // Ícono igual que login
+                  const Center(
+                    child: IconBadge(icon: Icons.lock_reset_rounded),
                   ),
-                  validator: (v) {
-                    if (v != _newPasswordController.text) return 'Las contraseñas no coinciden';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                if (_error != null)
-                  Text(_error!, style: const TextStyle(color: Colors.red)),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: _loading ? null : _submit,
-                    child: _loading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Cambiar contraseña'),
+                  const SizedBox(height: 24),
+
+                  // Título estilo login
+                  Text(
+                    'Cambiar contraseña',
+                    style: Theme.of(context).textTheme.displayMedium,
+                    textAlign: TextAlign.center,
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Text(
+                    'Por seguridad, debes establecer una nueva contraseña antes de continuar.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Campo nueva contraseña
+                  TextFormField(
+                    controller: _newPasswordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Nueva contraseña',
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.length < 6) return 'Mínimo 6 caracteres';
+                      if (v == 'Ecuador2026') return 'No puedes reusar la contraseña inicial';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Campo confirmar
+                  TextFormField(
+                    controller: _confirmController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirmar contraseña',
+                      prefixIcon: Icon(Icons.lock_outline),
+                    ),
+                    validator: (v) {
+                      if (v != _newPasswordController.text) return 'Las contraseñas no coinciden';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Error message
+                  if (_error != null) ...[
+                    Text(_error!, style: const TextStyle(color: Colors.red)),
+                    const SizedBox(height: 8),
+                  ],
+
+                  // Botón confirmar
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: _loading ? null : _submit,
+                      child: _loading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text('Confirmar nueva contraseña'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

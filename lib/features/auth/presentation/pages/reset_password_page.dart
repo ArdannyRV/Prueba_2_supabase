@@ -75,30 +75,32 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Back button
+                        // Franja tricolor
+                        const FlagStripe(),
+                        const SizedBox(height: 16),
+
+                        // Flecha volver
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back),
+                          child: TextButton.icon(
                             onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+                            label: const Text('Volver al login'),
                           ),
                         ),
                         const SizedBox(height: 16),
 
-                        // Sello institucional (acento rojo: flujo sensible de seguridad)
-                        const FlagStripe(),
-                        const SizedBox(height: 24),
-                        Center(
+                        // Ícono
+                        const Center(
                           child: IconBadge(
                             icon: Icons.lock_reset,
-                            color: Theme.of(context).colorScheme.tertiary,
                           ),
                         ),
                         const SizedBox(height: 24),
 
                         // Título
                         Text(
-                          'Recuperar contraseña',
+                          'Restablecer contraseña',
                           style: Theme.of(context).textTheme.displayMedium,
                           textAlign: TextAlign.center,
                         ),
@@ -108,7 +110,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           style: Theme.of(context).textTheme.bodyMedium,
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 48),
+                        const SizedBox(height: 40),
 
                         // Email field
                         CustomTextField(
@@ -137,28 +139,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                             child: const Text('Enviar enlace de recuperación'),
                           ),
                         ),
-                        const SizedBox(height: 24),
-
-                        // Info card
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    'Recibirás un enlace para crear una nueva contraseña',
-                                    style: Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Recibirás un enlace en tu correo para crear una nueva contraseña.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
