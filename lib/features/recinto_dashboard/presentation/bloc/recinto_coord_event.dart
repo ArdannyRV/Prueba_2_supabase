@@ -63,3 +63,17 @@ class CorregirActaEvent extends RecintoCoordEvent {
     required this.votos,
   });
 }
+
+class ActualizarVeedorEvent extends RecintoCoordEvent {
+  final String id;
+  final String nombres;
+  final String apellidos;
+  final String telefono;
+
+  const ActualizarVeedorEvent({
+    required this.id,
+    required this.nombres,
+    required this.apellidos,
+    required this.telefono,
+  });
+}

@@ -281,4 +281,17 @@ class RecintoCoordRemoteDataSource {
           // Let's assume the UI sends the candidato_id in the map
     }
   }
+
+  Future<void> actualizarVeedor({
+    required String id,
+    required String nombres,
+    required String apellidos,
+    required String telefono,
+  }) async {
+    await supabaseClient.from('perfiles').update({
+      'nombres': nombres,
+      'apellidos': apellidos,
+      'telefono': telefono,
+    }).eq('id', id);
+  }
 }

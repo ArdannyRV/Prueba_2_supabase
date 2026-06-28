@@ -7,7 +7,6 @@ import '../../../../core/theme/app_theme.dart';
 
 class UpdateCoordinadorForm extends StatefulWidget {
   final CoordinadorEntity coordinador;
-
   const UpdateCoordinadorForm({super.key, required this.coordinador});
 
   @override
@@ -50,6 +49,25 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
     }
   }
 
+  Widget _readOnlyField({required String label, required String? value}) {
+    return TextFormField(
+      initialValue: value ?? '-',
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: const Color(0xFFF0F0F0),
+        labelStyle: const TextStyle(color: AppTheme.textSecondaryColor),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(6),
+          borderSide: const BorderSide(color: AppTheme.borderColor),
+        ),
+      ),
+      style: const TextStyle(color: AppTheme.textSecondaryColor, fontSize: 13),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -65,44 +83,60 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Actualizar Coordinador',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            // Título
+            Text(
+              'Actualizar Coordinador',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.flagBlue,
                   ),
+            ),
+            const SizedBox(height: 6),
+            Center(child: Container(height: 2, width: 40, color: AppTheme.flagYellow)),
+            const SizedBox(height: 16),
+
+            // Cédula (solo lectura)
+            _readOnlyField(label: 'Cédula', value: widget.coordinador.cedula),
+            const SizedBox(height: 12),
+
+            // Nombres + Apellidos en fila
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _nombresCtrl,
+                    decoration: const InputDecoration(labelText: 'Nombres'),
+                    validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                  ),
                 ),
-                const SizedBox(height: 6),
-                Center(
-                  child: Container(height: 2, width: 40, color: AppTheme.flagYellow),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: TextFormField(
+                    controller: _apellidosCtrl,
+                    decoration: const InputDecoration(labelText: 'Apellidos'),
+                    validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _nombresCtrl,
-              decoration: const InputDecoration(labelText: 'Nombres'),
-              validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
-            ),
             const SizedBox(height: 12),
-            TextFormField(
-              controller: _apellidosCtrl,
-              decoration: const InputDecoration(labelText: 'Apellidos'),
-              validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
-            ),
-            const SizedBox(height: 12),
+
+            // Teléfono
             TextFormField(
               controller: _telefonoCtrl,
               decoration: const InputDecoration(labelText: 'Teléfono'),
               keyboardType: TextInputType.phone,
               validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
             ),
+            const SizedBox(height: 12),
+
+            // Correo (solo lectura)
+            _readOnlyField(label: 'Correo electrónico', value: widget.coordinador.correo),
             const SizedBox(height: 24),
+
+            // Botón guardar
             SizedBox(
               height: 46,
               child: ElevatedButton(
@@ -112,7 +146,8 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                 ),
-                child: const Text('Guardar Cambios', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                child: const Text('Guardar Cambios',
+                    style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
               ),
             ),
             const SizedBox(height: 24),

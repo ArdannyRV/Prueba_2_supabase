@@ -59,6 +59,15 @@ class MisMesasPage extends StatelessWidget {
               final mesa = state.mesas[index];
               final hasVeedor = mesa.veedorId != null;
 
+              final Color bordeColor;
+              if (mesa.tieneActa) {
+                bordeColor = AppTheme.flagBlue;
+              } else if (mesa.veedorId != null) {
+                bordeColor = AppTheme.flagYellow;
+              } else {
+                bordeColor = AppTheme.flagRed;
+              }
+
               return Card(
                 elevation: 1,
                 margin: EdgeInsets.zero,
@@ -70,13 +79,13 @@ class MisMesasPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(6),
                     border: Border(
                       left: BorderSide(
-                        color: mesa.tieneActa ? AppTheme.flagBlue : AppTheme.flagRed,
+                        color: bordeColor,
                         width: 3,
                       ),
                     ),
                   ),
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding: const EdgeInsets.only(left: 10, right: 6, top: 0, bottom: 0),
                     leading: CircleAvatar(
                       radius: 16,
                       backgroundColor: const Color(0xFFEEF2FF),
@@ -92,7 +101,7 @@ class MisMesasPage extends StatelessWidget {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Row(
                           children: [
                             const Icon(Icons.person, size: 14),
@@ -109,7 +118,7 @@ class MisMesasPage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(

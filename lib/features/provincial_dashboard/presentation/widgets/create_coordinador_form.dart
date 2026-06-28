@@ -115,22 +115,24 @@ class _CreateCoordinadorFormState extends State<CreateCoordinadorForm> {
                 },
               ),
               const SizedBox(height: 12),
-              TextFormField(
-                controller: _nombresController,
-                decoration: const InputDecoration(
-                  labelText: 'Nombres',
-                  prefixIcon: Icon(Icons.person),
-                ),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _apellidosController,
-                decoration: const InputDecoration(
-                  labelText: 'Apellidos',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
-                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _nombresController,
+                      decoration: const InputDecoration(labelText: 'Nombres'),
+                      validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _apellidosController,
+                      decoration: const InputDecoration(labelText: 'Apellidos'),
+                      validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               TextFormField(

@@ -13,6 +13,7 @@ class RecintoCoordBloc extends Bloc<RecintoCoordEvent, RecintoCoordState> {
     on<AsignarVeedorEvent>(_onAsignarVeedor);
     on<DesasignarVeedorEvent>(_onDesasignarVeedor);
     on<CrearVeedorEvent>(_onCrearVeedor);
+    on<ActualizarVeedorEvent>(_onActualizarVeedor);
     on<EliminarVeedorEvent>(_onEliminarVeedor);
     on<CorregirActaEvent>(_onCorregirActa);
   }
@@ -113,6 +114,28 @@ class RecintoCoordBloc extends Bloc<RecintoCoordEvent, RecintoCoordState> {
       emit(state.copyWith(
         isLoading: false,
         successMessage: 'Veedor creado exitosamente',
+      ));
+      add(const FetchVeedoresEvent());
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      ));
+    }
+  }
+
+  Future<void> _onActualizarVeedor(ActualizarVeedorEvent event, Emitter<RecintoCoordState> emit) async {
+    emit(state.copyWith(isLoading: true, clearMessages: true));
+    try {
+      await dataSource.actualizarVeedor(
+        id: event.id,
+        nombres: event.nombres,
+        apellidos: event.apellidos,
+        telefono: event.telefono,
+      );
+      emit(state.copyWith(
+        isLoading: false,
+        successMessage: 'Veedor actualizado correctamente',
       ));
       add(const FetchVeedoresEvent());
     } catch (e) {

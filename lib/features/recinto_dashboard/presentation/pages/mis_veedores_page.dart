@@ -6,6 +6,7 @@ import '../bloc/recinto_coord_bloc.dart';
 import '../bloc/recinto_coord_event.dart';
 import '../bloc/recinto_coord_state.dart';
 import '../widgets/create_veedor_bottom_sheet.dart';
+import '../widgets/editar_veedor_bottom_sheet.dart';
 
 class MisVeedoresPage extends StatefulWidget {
   const MisVeedoresPage({super.key});
@@ -28,6 +29,20 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
       builder: (_) => BlocProvider.value(
         value: context.read<RecintoCoordBloc>(),
         child: const CreateVeedorBottomSheet(),
+      ),
+    );
+  }
+
+  void _showEditarVeedorSheet(BuildContext context, VeedorEntity veedor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(6)),
+      ),
+      builder: (_) => BlocProvider.value(
+        value: context.read<RecintoCoordBloc>(),
+        child: EditarVeedorBottomSheet(veedor: veedor),
       ),
     );
   }
@@ -62,11 +77,6 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
       },
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: AppTheme.flagBlue,
-          onPressed: () => _showCrearVeedorSheet(context),
-          child: const Icon(Icons.person_add, color: Colors.white),
-        ),
         body: BlocBuilder<RecintoCoordBloc, RecintoCoordState>(
           builder: (context, state) {
             if (state.isLoading && state.veedores.isEmpty) {
@@ -107,25 +117,37 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Buscar veedor por nombre o cédula...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: 'Buscar veedor por nombre o cédul...',
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                            filled: true,
+                            fillColor: Colors.white,
+                          ),
+                          onChanged: (v) => setState(() { _searchQuery = v; }),
+                        ),
                       ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(6),
-                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 48,
+                        width: 48,
+                        child: ElevatedButton(
+                          onPressed: () => _showCrearVeedorSheet(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.flagBlue,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          ),
+                          child: const Icon(Icons.person_add, size: 22),
+                        ),
                       ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                    onChanged: (val) {
-                      setState(() => _searchQuery = val);
-                    },
+                    ],
                   ),
                 ),
                 Expanded(
@@ -178,40 +200,50 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
                           elevation: 1,
                           margin: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                            leading: CircleAvatar(
-                              radius: 16,
-                              backgroundColor: const Color(0xFFEEF2FF),
-                              child: Text(
-                                veedor.nombres?.isNotEmpty == true ? veedor.nombres![0].toUpperCase() : 'V',
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.flagBlue),
-                              ),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border(left: BorderSide(
+                                color: veedor.mesaAsignada != null ? AppTheme.flagBlue : AppTheme.flagRed,
+                                width: 3,
+                              )),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            title: Text(
-                              veedor.nombreCompleto,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 2),
-                                Text(veedor.cedula ?? 'Sin cédula', style: const TextStyle(fontSize: 12)),
-                                const SizedBox(height: 2),
-                                Text(
-                                  veedor.mesaAsignada ?? 'Sin mesa asignada',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: veedor.mesaAsignada != null ? AppTheme.flagBlue : Colors.black54,
-                                    fontWeight: veedor.mesaAsignada != null ? FontWeight.w600 : FontWeight.normal,
-                                  ),
+                            child: ListTile(
+                              onTap: () => _showEditarVeedorSheet(context, veedor),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              leading: CircleAvatar(
+                                radius: 16,
+                                backgroundColor: const Color(0xFFEEF2FF),
+                                child: Text(
+                                  veedor.nombres?.isNotEmpty == true ? veedor.nombres![0].toUpperCase() : 'V',
+                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppTheme.flagBlue),
                                 ),
-                              ],
+                              ),
+                              title: Text(
+                                veedor.nombreCompleto,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 2),
+                                  Text(veedor.cedula ?? 'Sin cédula', style: const TextStyle(fontSize: 12)),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    veedor.mesaAsignada ?? 'Sin mesa asignada',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: veedor.mesaAsignada != null ? AppTheme.flagBlue : Colors.black54,
+                                      fontWeight: veedor.mesaAsignada != null ? FontWeight.w600 : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
