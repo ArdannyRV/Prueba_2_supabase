@@ -17,6 +17,7 @@ class MisVeedoresPage extends StatefulWidget {
 
 class _MisVeedoresPageState extends State<MisVeedoresPage> {
   String _searchQuery = '';
+  String _filtro = 'todos'; // valores: 'todos', 'asignados', 'sin_asignar'
   List<VeedorEntity>? _localVeedores;
 
   void _showCrearVeedorSheet(BuildContext context) {
@@ -109,8 +110,13 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
 
             final filtered = veedores.where((v) {
               final q = _searchQuery.toLowerCase();
-              return v.nombreCompleto.toLowerCase().contains(q) ||
-                  (v.cedula ?? '').contains(q);
+              final matchSearch = (v.nombres?.toLowerCase().contains(q) ?? false) ||
+                  (v.apellidos?.toLowerCase().contains(q) ?? false) ||
+                  (v.cedula?.toLowerCase().contains(q) ?? false);
+              final matchFiltro = _filtro == 'todos' ||
+                  (_filtro == 'asignados' && v.mesaAsignada != null) ||
+                  (_filtro == 'sin_asignar' && v.mesaAsignada == null);
+              return matchSearch && matchFiltro;
             }).toList();
 
             return Column(
@@ -147,6 +153,38 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
                           child: const Icon(Icons.person_add, size: 22),
                         ),
                       ),
+                    ],
+                  ),
+                ),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final entry in {
+                        'todos': 'Todos',
+                        'asignados': 'Asignados',
+                        'sin_asignar': 'Sin asignar',
+                      }.entries)
+                        FilterChip(
+                          label: Text(
+                            entry.value,
+                            style: _filtro == entry.key
+                                ? const TextStyle(color: AppTheme.flagBlue, fontSize: 11, fontWeight: FontWeight.w600)
+                                : const TextStyle(color: Colors.black, fontSize: 11),
+                          ),
+                          selected: _filtro == entry.key,
+                          selectedColor: AppTheme.flagYellow,
+                          checkmarkColor: AppTheme.flagBlue,
+                          backgroundColor: Colors.white,
+                          side: const BorderSide(color: AppTheme.flagBlue, width: 0.8),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                          onSelected: (_) => setState(() => _filtro = entry.key),
+                        ),
                     ],
                   ),
                 ),
