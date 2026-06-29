@@ -59,15 +59,21 @@ class _MisActasPageState extends State<MisActasPage> {
         }
       },
       builder: (context, state) {
+        final actas = widget.dignidadInicial != null
+            ? state.actasActuales.where((a) => a['dignidad'] == widget.dignidadInicial).toList()
+            : state.actasActuales;
+
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Actas Registradas'),
+            title: Text(widget.dignidadInicial != null
+                ? (widget.dignidadInicial == 'alcaldia' ? 'Acta de Alcaldía' : 'Acta de Prefectura')
+                : 'Actas Registradas'),
             backgroundColor: AppTheme.flagBlue,
             foregroundColor: Colors.white,
           ),
-          body: state.isLoading && state.actasActuales.isEmpty
+          body: state.isLoading && actas.isEmpty
               ? const Center(child: CircularProgressIndicator())
-              : state.actasActuales.isEmpty
+              : actas.isEmpty
                   ? Center(
                       child: Text(
                         'No hay actas registradas para esta mesa.',
@@ -78,9 +84,9 @@ class _MisActasPageState extends State<MisActasPage> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: state.actasActuales.length,
+                      itemCount: actas.length,
                       itemBuilder: (context, index) {
-                        final acta = state.actasActuales[index];
+                        final acta = actas[index];
                         final bool corregida = acta['corregida'] ?? false;
                         final List votos = acta['votos_candidatos'] ?? [];
                         final fotoUrl = acta['foto_url'];
@@ -328,6 +334,33 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
     }
   }
 
+  Future<void> _abrirGaleria() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (picked == null) return;
+
+    setState(() {
+      _validandoNitidez = true;
+      _foto = File(picked.path);
+      _nitidezScore = null;
+    });
+
+    final score = await _calcularNitidez(_foto!);
+
+    if (mounted) {
+      setState(() {
+        _nitidezScore = score;
+        _validandoNitidez = false;
+      });
+
+      if (score < 50) {
+        FeedbackSnackbar.showError(context, 'Foto borrosa (nitidez: ${score.toStringAsFixed(1)}). Selecciona otra.');
+      } else {
+        FeedbackSnackbar.showSuccess(context, 'Foto aceptada ✓ (nitidez: ${score.toStringAsFixed(1)})');
+      }
+    }
+  }
+
   Future<void> _guardar() async {
     final totalVotosCandidatos = _votosControllers.fold(0, (sum, c) => sum + (int.tryParse(c.text) ?? 0));
     final blancos = int.tryParse(_blancosCtrl.text) ?? 0;
@@ -539,10 +572,24 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
                       ),
                       const SizedBox(height: 16),
                     ],
-                    OutlinedButton.icon(
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Tomar nueva foto'),
-                      onPressed: _tomarFoto,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.camera_alt),
+                            label: const Text('Cámara'),
+                            onPressed: _tomarFoto,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            icon: const Icon(Icons.photo_library),
+                            label: const Text('Galería'),
+                            onPressed: _abrirGaleria,
+                          ),
+                        ),
+                      ],
                     ),
                     if (_validandoNitidez)
                       const Padding(
