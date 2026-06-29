@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -280,33 +281,6 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
     super.dispose();
   }
 
-  Future<double> _calcularNitidez(File foto) async {
-    final bytes = await foto.readAsBytes();
-    final image = img.decodeImage(bytes);
-    if (image == null) return 0;
-
-    final gris = img.grayscale(image);
-    final resized = img.copyResize(gris, width: 200);
-
-    List<double> laplacian = [];
-    for (int y = 1; y < resized.height - 1; y++) {
-      for (int x = 1; x < resized.width - 1; x++) {
-        final center = img.getLuminance(resized.getPixel(x, y));
-        final top = img.getLuminance(resized.getPixel(x, y - 1));
-        final bottom = img.getLuminance(resized.getPixel(x, y + 1));
-        final left = img.getLuminance(resized.getPixel(x - 1, y));
-        final right = img.getLuminance(resized.getPixel(x + 1, y));
-        laplacian.add((top + bottom + left + right - 4 * center).abs().toDouble());
-      }
-    }
-    
-    if (laplacian.isEmpty) return 0;
-    
-    final mean = laplacian.reduce((a, b) => a + b) / laplacian.length;
-    final variance = laplacian.map((v) => (v - mean) * (v - mean)).reduce((a, b) => a + b) / laplacian.length;
-    return variance;
-  }
-
   Future<void> _tomarFoto() async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.camera, imageQuality: 85);
@@ -318,18 +292,19 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
       _nitidezScore = null;
     });
 
-    final score = await _calcularNitidez(_foto!);
+    final bool isSharp = await compute(_calcularNitidezIsolate, _foto!.path);
     
     if (mounted) {
       setState(() {
-        _nitidezScore = score;
+        _nitidezScore = isSharp ? 200.0 : 0.0; // 200 = pasa, 0 = falla
         _validandoNitidez = false;
       });
 
-      if (score < 50) {
-        FeedbackSnackbar.showError(context, 'Foto borrosa (nitidez: ${score.toStringAsFixed(1)}). Por favor toma otra foto más nítida.');
+      if (!isSharp) {
+        FeedbackSnackbar.showError(context,
+          'Foto muy borrosa o pixeleada. Por favor toma otra más nítida.');
       } else {
-        FeedbackSnackbar.showSuccess(context, 'Foto aceptada ✓ (nitidez: ${score.toStringAsFixed(1)})');
+        FeedbackSnackbar.showSuccess(context, 'Foto aceptada ✓');
       }
     }
   }
@@ -345,18 +320,19 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
       _nitidezScore = null;
     });
 
-    final score = await _calcularNitidez(_foto!);
+    final bool isSharp = await compute(_calcularNitidezIsolate, _foto!.path);
 
     if (mounted) {
       setState(() {
-        _nitidezScore = score;
+        _nitidezScore = isSharp ? 200.0 : 0.0; // 200 = pasa, 0 = falla
         _validandoNitidez = false;
       });
 
-      if (score < 50) {
-        FeedbackSnackbar.showError(context, 'Foto borrosa (nitidez: ${score.toStringAsFixed(1)}). Selecciona otra.');
+      if (!isSharp) {
+        FeedbackSnackbar.showError(context,
+          'Foto muy borrosa o pixeleada. Por favor toma otra más nítida.');
       } else {
-        FeedbackSnackbar.showSuccess(context, 'Foto aceptada ✓ (nitidez: ${score.toStringAsFixed(1)})');
+        FeedbackSnackbar.showSuccess(context, 'Foto aceptada ✓');
       }
     }
   }
@@ -576,16 +552,26 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            icon: const Icon(Icons.camera_alt),
-                            label: const Text('Cámara'),
+                            icon: const Icon(Icons.camera_alt, size: 18),
+                            label: const Text(
+                              'Cámara',
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                            ),
                             onPressed: _tomarFoto,
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: OutlinedButton.icon(
-                            icon: const Icon(Icons.photo_library),
-                            label: const Text('Galería'),
+                            icon: const Icon(Icons.photo_library, size: 18),
+                            label: const Text(
+                              'Galería',
+                              style: TextStyle(fontSize: 13),
+                              overflow: TextOverflow.ellipsis,
+                              softWrap: false,
+                            ),
                             onPressed: _abrirGaleria,
                           ),
                         ),
@@ -606,7 +592,7 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
               child: ElevatedButton(
                 onPressed: _guardando 
                     ? null 
-                    : (_foto != null && (_nitidezScore == null || _nitidezScore! < 50)) 
+                    : (_foto != null && (_nitidezScore == null || _nitidezScore! < 150.0)) 
                         ? null 
                         : _guardar,
                 style: ElevatedButton.styleFrom(
@@ -626,5 +612,49 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
         ),
       ),
     );
+  }
+}
+
+bool _calcularNitidezIsolate(String imagePath) {
+  try {
+    final bytes = File(imagePath).readAsBytesSync();
+    final img.Image? decodedImage = img.decodeImage(bytes);
+    if (decodedImage == null) return false;
+
+    final img.Image grayscale = img.grayscale(decodedImage);
+    final img.Image small = img.copyResize(grayscale, width: 400);
+
+    final int width = small.width;
+    final int height = small.height;
+
+    double sum = 0.0;
+    List<double> laplacianValues = [];
+
+    for (int y = 1; y < height - 1; y++) {
+      for (int x = 1; x < width - 1; x++) {
+        final num top    = small.getPixel(x, y - 1).r;
+        final num bottom = small.getPixel(x, y + 1).r;
+        final num left   = small.getPixel(x - 1, y).r;
+        final num right  = small.getPixel(x + 1, y).r;
+        final num center = small.getPixel(x, y).r;
+
+        final double laplacian = (top + bottom + left + right - (4 * center)).toDouble();
+        laplacianValues.add(laplacian);
+        sum += laplacian;
+      }
+    }
+
+    if (laplacianValues.isEmpty) return false;
+
+    final double mean = sum / laplacianValues.length;
+    double varianceSum = 0.0;
+    for (final val in laplacianValues) {
+      varianceSum += (val - mean) * (val - mean);
+    }
+    final double variance = varianceSum / laplacianValues.length;
+
+    return variance >= 150.0;
+  } catch (e) {
+    return false;
   }
 }
