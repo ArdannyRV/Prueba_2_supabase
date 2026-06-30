@@ -119,4 +119,14 @@ class VeedorRemoteDataSource {
           .eq('candidato_id', voto['candidato_id']);
     }
   }
+
+  Future<void> eliminarActa({required String actaId, required String mesaId, required String dignidad}) async {
+    // Borrar votos asociados
+    await supabaseClient.from('votos_candidatos').delete().eq('acta_id', actaId);
+    // Borrar el acta
+    await supabaseClient.from('actas').delete().eq('id', actaId);
+    // Borrar la foto del storage
+    final path = 'actas/$mesaId/$dignidad/acta.jpg';
+    await supabaseClient.storage.from('actas-fotos').remove([path]);
+  }
 }

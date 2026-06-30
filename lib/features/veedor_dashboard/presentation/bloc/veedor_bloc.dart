@@ -11,6 +11,7 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
     on<FetchMisActasEvent>(_onFetchMisActas);
     on<RegistrarActaEvent>(_onRegistrarActa);
     on<CorregirActaVeedorEvent>(_onCorregirActa);
+    on<EliminarActaVeedorEvent>(_onEliminarActa);
   }
 
   Future<void> _onInitVeedor(InitVeedorEvent event, Emitter<VeedorState> emit) async {
@@ -93,6 +94,27 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
       ));
       
       // We don't automatically know the mesaId here to refetch, but we can re-trigger init
+      add(InitVeedorEvent());
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      ));
+    }
+  }
+
+  Future<void> _onEliminarActa(EliminarActaVeedorEvent event, Emitter<VeedorState> emit) async {
+    emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
+    try {
+      await dataSource.eliminarActa(
+        actaId: event.actaId,
+        mesaId: event.mesaId,
+        dignidad: '', // se pasa vacío, el datasource usará el path correcto
+      );
+      emit(state.copyWith(
+        isLoading: false,
+        successMessage: 'Acta eliminada correctamente',
+      ));
       add(InitVeedorEvent());
     } catch (e) {
       emit(state.copyWith(

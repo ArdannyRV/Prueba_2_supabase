@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,6 +41,17 @@ class _MisActasPageState extends State<MisActasPage> {
       builder: (_) => BlocProvider.value(
         value: context.read<VeedorBloc>(),
         child: CorregirActaBottomSheet(mesa: widget.mesa, acta: acta),
+      ),
+    );
+  }
+
+  void _showEliminarActaDialog(BuildContext context, Map<String, dynamic> acta) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => BlocProvider.value(
+        value: context.read<VeedorBloc>(),
+        child: _EliminarActaDialog(mesa: widget.mesa, acta: acta),
       ),
     );
   }
@@ -199,6 +211,15 @@ class _MisActasPageState extends State<MisActasPage> {
                                     side: const BorderSide(color: AppTheme.flagBlue),
                                   ),
                                   onPressed: () => _showCorregirActaSheet(context, acta),
+                                ),
+                                const SizedBox(height: 8),
+                                OutlinedButton.icon(
+                                  icon: const Icon(Icons.delete_forever, color: Colors.red),
+                                  label: const Text('Eliminar acta', style: TextStyle(color: Colors.red)),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.red),
+                                  ),
+                                  onPressed: () => _showEliminarActaDialog(context, acta),
                                 ),
                               ],
                             ),
@@ -577,6 +598,22 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
                         ),
                       ],
                     ),
+                    if (_foto != null && _nitidezScore != null && _nitidezScore! < 150.0)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Imagen de baja calidad. Por favor toma o sube una imagen más nítida y legible.',
+                                style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     if (_validandoNitidez)
                       const Padding(
                         padding: EdgeInsets.only(top: 8.0),
@@ -611,6 +648,105 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EliminarActaDialog extends StatefulWidget {
+  final MesaVeedorEntity mesa;
+  final Map<String, dynamic> acta;
+  const _EliminarActaDialog({required this.mesa, required this.acta});
+
+  @override
+  State<_EliminarActaDialog> createState() => _EliminarActaDialogState();
+}
+
+class _EliminarActaDialogState extends State<_EliminarActaDialog> {
+  int _segundos = 10;
+  bool _puedeConfirmar = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_segundos <= 1) {
+        t.cancel();
+        setState(() { _segundos = 0; _puedeConfirmar = true; });
+      } else {
+        setState(() => _segundos--);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final dignidadLabel = widget.acta['dignidad'] == 'alcaldia' ? 'Alcaldía' : 'Prefectura';
+    return AlertDialog(
+      title: Row(
+        children: const [
+          Icon(Icons.warning_amber_rounded, color: Colors.red),
+          SizedBox(width: 8),
+          Text('¿Estás seguro?', style: TextStyle(color: Colors.red)),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Vas a eliminar permanentemente el Acta de $dignidadLabel de la Mesa N°${widget.mesa.numeroMesa}, incluyendo todos los votos y la fotografía.',
+            style: const TextStyle(fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          if (!_puedeConfirmar)
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    '$_segundos',
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                  const Text('segundos para confirmar',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _puedeConfirmar
+              ? () {
+                  context.read<VeedorBloc>().add(EliminarActaVeedorEvent(
+                    actaId: widget.acta['id'],
+                    mesaId: widget.mesa.id,
+                  ));
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                }
+              : null,
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          child: Text(
+            _puedeConfirmar ? 'Sí, eliminar' : 'Espera...',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
     );
   }
 }

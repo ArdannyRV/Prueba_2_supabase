@@ -48,3 +48,9 @@ class CorregirActaVeedorEvent extends VeedorEvent {
     required this.votos,
   });
 }
+
+class EliminarActaVeedorEvent extends VeedorEvent {
+  final String actaId;
+  final String mesaId;
+  EliminarActaVeedorEvent({required this.actaId, required this.mesaId});
+}
