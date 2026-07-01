@@ -123,6 +123,9 @@ class VeedorLocalDataSource {
       }, conflictAlgorithm: ConflictAlgorithm.replace);
 
       // Insertar votos
+      print('=== LOG TEMPORAL 3: GUARDANDO VOTOS OFFLINE ===');
+      print('Votos recibidos en el parámetro (acta \$localId): \${votos.length}');
+      
       for (final voto in votos) {
         await txn.insert('votos_candidatos_local', {
           'id': const Uuid().v4(), // id verdaderamente único
@@ -131,6 +134,12 @@ class VeedorLocalDataSource {
           'cantidad': voto['cantidad'],
         }, conflictAlgorithm: ConflictAlgorithm.replace);
       }
+
+      // Verificando filas insertadas
+      final insertedRows = await txn.rawQuery('SELECT COUNT(*) as count FROM votos_candidatos_local WHERE acta_local_id = ?', [localId]);
+      print("Votos guardados exitosamente en la BD para esta acta: \${insertedRows.first['count']}");
+      print('==================================================');
+
 
       // Actualizar el estado de la mesa local para reflejar que tiene acta
       final columnToUpdate = dignidad == 'alcaldia' ? 'tiene_acta_alcaldia' : 'tiene_acta_prefectura';

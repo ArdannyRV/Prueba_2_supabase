@@ -46,6 +46,15 @@ class _RegistroActaPageState extends State<RegistroActaPage> {
           );
           _isLoading = false;
         });
+        
+        // LOG TEMPORAL 1: Cuántos candidatos y sus IDs
+        print("=== LOG TEMPORAL 1: CARGA DE CANDIDATOS ===");
+        print("Dignidad: ${widget.dignidad}");
+        print("Total candidatos cargados: ${candidatos.length}");
+        for (var c in candidatos) {
+          print("ID: ${c['id']} | Nombre: ${c['nombre_candidato']} | Lista: ${c['lista_numero']}");
+        }
+        print("===========================================");
       }
     } catch (e) {
       if (mounted) {
@@ -88,6 +97,14 @@ class _RegistroActaPageState extends State<RegistroActaPage> {
       'candidato_id': _candidatos[i]['id'],
       'cantidad': int.tryParse(_votosControllers[i].text) ?? 0,
     });
+
+    // LOG TEMPORAL 2: Votos generados antes de navegar
+    print('=== LOG TEMPORAL 2: VOTOS ANTES DE NAVEGAR ===');
+    print('Total votos en la lista generada: \${votos.length}');
+    for (var v in votos) {
+      print("Candidato_id: \${v['candidato_id']} | Cantidad: \${v['cantidad']}");
+    }
+    print('==============================================');
 
     Navigator.push(
       context,
