@@ -211,8 +211,6 @@ class _FormCorreccionActaState extends State<_FormCorreccionActa> {
   
   final Map<String, TextEditingController> _votosCtrls = {};
   
-  List<Map<String, dynamic>> _todosLosVotos = [];
-
   @override
   void initState() {
     super.initState();
@@ -220,10 +218,14 @@ class _FormCorreccionActaState extends State<_FormCorreccionActa> {
     _nulosCtrl = TextEditingController(text: '${widget.mesa.votosNulos ?? 0}');
     _totalCtrl = TextEditingController(text: '${widget.mesa.totalSufragantes ?? 0}');
     
-    _todosLosVotos = [...widget.mesa.votosAlcaldia, ...widget.mesa.votosPrefectura];
-    for (var voto in _todosLosVotos) {
+    final todosLosVotos = [
+      ...widget.mesa.votosAlcaldia,
+      ...widget.mesa.votosPrefectura
+    ];
+    for (var voto in todosLosVotos) {
       final candId = voto['candidato_id'].toString();
-      _votosCtrls[candId] = TextEditingController(text: '${voto['cantidad'] ?? 0}');
+      _votosCtrls[candId] =
+          TextEditingController(text: '${voto['cantidad'] ?? 0}');
     }
   }
 
@@ -243,13 +245,14 @@ class _FormCorreccionActaState extends State<_FormCorreccionActa> {
     
     if (widget.mesa.actaId == null) return;
 
-    final nuevosVotos = _todosLosVotos.map((voto) {
+    final todosLosVotos = [
+      ...widget.mesa.votosAlcaldia,
+      ...widget.mesa.votosPrefectura
+    ];
+    final nuevosVotos = todosLosVotos.map((voto) {
       final candId = voto['candidato_id'].toString();
       final cant = int.tryParse(_votosCtrls[candId]?.text ?? '0') ?? 0;
-      return {
-        'candidato_id': voto['candidato_id'],
-        'cantidad': cant,
-      };
+      return {'candidato_id': voto['candidato_id'], 'cantidad': cant};
     }).toList();
 
     context.read<RecintoCoordBloc>().add(CorregirActaEvent(
@@ -276,12 +279,20 @@ class _FormCorreccionActaState extends State<_FormCorreccionActa> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Corregir Acta',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.flagBlue),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Corregir Acta',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.flagBlue),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.grey),
+                  onPressed: () => Navigator.of(context).pop(),
+                  tooltip: 'Volver',
+                ),
+              ],
             ),
-            const SizedBox(height: 6),
             Center(
               child: Container(height: 2, width: 40, color: AppTheme.flagYellow),
             ),
@@ -292,6 +303,87 @@ class _FormCorreccionActaState extends State<_FormCorreccionActa> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text('Votos por Candidato',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                    const SizedBox(height: 12),
+
+                    // Alcaldía
+                    const Text('Alcaldía',
+                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12,
+                            color: AppTheme.flagBlue)),
+                    const SizedBox(height: 8),
+                    ...widget.mesa.votosAlcaldia.map((voto) {
+                      final candId = voto['candidato_id'].toString();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Text('${voto['nombre_candidato']}',
+                                  style: const TextStyle(fontSize: 12)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 1,
+                              child: TextFormField(
+                                controller: _votosCtrls[candId],
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 12)),
+                                validator: (v) => v!.isEmpty ? 'Req.' : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+
+                    // Prefectura
+                    const Text('Prefectura',
+                        style: TextStyle(fontWeight: FontWeight.w500, fontSize: 12,
+                            color: AppTheme.flagBlue)),
+                    const SizedBox(height: 8),
+                    ...widget.mesa.votosPrefectura.map((voto) {
+                      final candId = voto['candidato_id'].toString();
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Text('${voto['nombre_candidato']}',
+                                  style: const TextStyle(fontSize: 12)),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              flex: 1,
+                              child: TextFormField(
+                                controller: _votosCtrls[candId],
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 12)),
+                                validator: (v) => v!.isEmpty ? 'Req.' : null,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+
+                    // Blancos, Nulos, Total
                     Row(
                       children: [
                         Expanded(
@@ -322,36 +414,7 @@ class _FormCorreccionActaState extends State<_FormCorreccionActa> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    const Text('Votos por Candidato', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                    const SizedBox(height: 12),
-                    ..._todosLosVotos.map((voto) {
-                      final candId = voto['candidato_id'].toString();
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                '${voto['nombre_candidato']}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              flex: 1,
-                              child: TextFormField(
-                                controller: _votosCtrls[candId],
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(isDense: true, contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12)),
-                                validator: (v) => v!.isEmpty ? 'Req.' : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),

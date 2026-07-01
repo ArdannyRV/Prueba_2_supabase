@@ -149,12 +149,14 @@ class _MisActasPageState extends State<MisActasPage> {
                                 if (fotoUrl != null)
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
-                                    child: Image.network(
-                                      fotoUrl,
-                                      height: 150,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    ),
+                                      child: Image.network(
+                                        '${acta['foto_url']}?t=${DateTime.now().millisecondsSinceEpoch}',
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        errorBuilder: (context, error, stackTrace) => const Center(
+                                          child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                        ),
+                                      ),
                                   ),
                                 const SizedBox(height: 16),
                                 Row(
@@ -399,7 +401,7 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
           fotoUrl: nuevaFotoUrl,
           votos: votos,
         ));
-        
+        context.read<VeedorBloc>().add(FetchMisActasEvent(widget.mesa.id));
         Navigator.of(context).pop();
       }
     } catch (e) {
