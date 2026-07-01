@@ -1,7 +1,9 @@
 import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:injectable/injectable.dart';
 import '../../domain/entities/mesa_veedor_entity.dart';
 
+@lazySingleton
 class VeedorRemoteDataSource {
   final SupabaseClient supabaseClient;
   

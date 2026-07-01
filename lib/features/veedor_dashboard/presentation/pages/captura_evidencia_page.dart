@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -192,17 +193,18 @@ class _CapturaEvidenciaPageState extends State<CapturaEvidenciaPage> {
       // GPS
       final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
 
-      // Subir foto
-      final ds = VeedorRemoteDataSource(Supabase.instance.client);
-      final bytes = await _foto!.readAsBytes();
-      final fotoUrl = await ds.subirFoto(widget.mesa.id, widget.dignidad, bytes);
+      // Subir foto localmente
+      final appDir = await getApplicationDocumentsDirectory();
+      final extension = _foto!.path.split('.').last;
+      final fileName = '${widget.mesa.id}_${widget.dignidad}_${DateTime.now().millisecondsSinceEpoch}.$extension';
+      final localImage = await _foto!.copy('${appDir.path}/$fileName');
 
       if (mounted) {
-        // Registrar acta via BLoC
+        // Registrar acta via BLoC (guardado local offline)
         context.read<VeedorBloc>().add(RegistrarActaEvent(
           mesaId: widget.mesa.id,
           dignidad: widget.dignidad,
-          fotoUrl: fotoUrl,
+          fotoLocalPath: localImage.path,
           votosBlancos: widget.votosBlancos,
           votosNulos: widget.votosNulos,
           totalSufragantes: widget.totalSufragantes,
@@ -211,10 +213,8 @@ class _CapturaEvidenciaPageState extends State<CapturaEvidenciaPage> {
           votos: widget.votos,
         ));
 
-        // Note: Instead of doing Navigator pop immediately here, 
-        // normally we should wait for bloc state, but we will just trust it
-        // and navigate back to dashboard, the bloc listener on MisMesasVeedorPage 
-        // will show the success message.
+        // Volver al dashboard
+
         Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } catch (e) {

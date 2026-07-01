@@ -6,9 +6,10 @@ import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../auth/presentation/pages/login_page.dart';
-import '../../data/datasources/veedor_remote_data_source.dart';
+import '../../../../injection_container.dart';
 import '../bloc/veedor_bloc.dart';
 import '../bloc/veedor_event.dart';
+import '../bloc/veedor_state.dart';
 import 'mis_mesas_veedor_page.dart';
 
 class VeedorDashboardPage extends StatefulWidget {
@@ -24,8 +25,7 @@ class _VeedorDashboardPageState extends State<VeedorDashboardPage> {
   @override
   void initState() {
     super.initState();
-    _veedorBloc = VeedorBloc(VeedorRemoteDataSource(Supabase.instance.client))
-      ..add(InitVeedorEvent());
+    _veedorBloc = getIt<VeedorBloc>()..add(InitVeedorEvent());
   }
 
   @override
@@ -53,6 +53,41 @@ class _VeedorDashboardPageState extends State<VeedorDashboardPage> {
             backgroundColor: AppTheme.flagBlue,
             foregroundColor: Colors.white,
             actions: [
+              BlocBuilder<VeedorBloc, VeedorState>(
+                builder: (context, state) {
+                  final conflictosCount = state.actasEnConflicto.length;
+                  // TODO: idealmente pendientesCount también vendría del estado o de un stream del SyncService, 
+                  // pero de momento podemos mostrar si hay conflictos.
+                  if (conflictosCount > 0) {
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.sync_problem, color: Colors.orange),
+                          tooltip: 'Hay conflictos de sincronización',
+                          onPressed: () {},
+                        ),
+                        Positioned(
+                          right: 8,
+                          top: 8,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              '$conflictosCount',
+                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
               IconButton(
                 icon: const Icon(Icons.logout),
                 tooltip: 'Cerrar sesión',

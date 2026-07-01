@@ -1,26 +1,41 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/datasources/veedor_remote_data_source.dart';
+import 'package:injectable/injectable.dart';
+import '../../domain/repositories/veedor_repository.dart';
 import 'veedor_event.dart';
 import 'veedor_state.dart';
 
+@injectable
 class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
-  final VeedorRemoteDataSource dataSource;
+  final VeedorRepository repository;
 
-  VeedorBloc(this.dataSource) : super(const VeedorState()) {
+  VeedorBloc(this.repository) : super(const VeedorState()) {
     on<InitVeedorEvent>(_onInitVeedor);
     on<FetchMisActasEvent>(_onFetchMisActas);
     on<RegistrarActaEvent>(_onRegistrarActa);
     on<CorregirActaVeedorEvent>(_onCorregirActa);
     on<EliminarActaVeedorEvent>(_onEliminarActa);
+    on<SincronizarPendientesEvent>(_onSincronizarPendientes);
+    on<ResolverConflictoEvent>(_onResolverConflicto);
   }
 
   Future<void> _onInitVeedor(InitVeedorEvent event, Emitter<VeedorState> emit) async {
     emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
     try {
-      final mesas = await dataSource.getMisAsignadas();
+      final mesas = await repository.getMisAsignadas();
+      final conflictos = await repository.getActasEnConflicto();
+      
+      // Cachear candidatos de forma silenciosa para que estén disponibles offline
+      try {
+        await repository.getCandidatos('alcaldia');
+        await repository.getCandidatos('prefectura');
+      } catch (_) {
+        // Ignorar errores aquí. Si no hay conexión y no hay caché, fallará en registro_acta_page
+      }
+
       emit(state.copyWith(
         isLoading: false,
         mesas: mesas,
+        actasEnConflicto: conflictos,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -33,10 +48,12 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
   Future<void> _onFetchMisActas(FetchMisActasEvent event, Emitter<VeedorState> emit) async {
     emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
     try {
-      final actas = await dataSource.getMisActas(event.mesaId);
+      final actas = await repository.getMisActas(event.mesaId);
+      final conflictos = await repository.getActasEnConflicto();
       emit(state.copyWith(
         isLoading: false,
         actasActuales: actas,
+        actasEnConflicto: conflictos,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -49,13 +66,13 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
   Future<void> _onRegistrarActa(RegistrarActaEvent event, Emitter<VeedorState> emit) async {
     emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
     try {
-      await dataSource.registrarActa(
+      await repository.registrarActa(
         mesaId: event.mesaId,
         dignidad: event.dignidad,
         votosBlancos: event.votosBlancos,
         votosNulos: event.votosNulos,
         totalSufragantes: event.totalSufragantes,
-        fotoUrl: event.fotoUrl,
+        fotoLocalPath: event.fotoLocalPath,
         latitud: event.latitud,
         longitud: event.longitud,
         votos: event.votos,
@@ -63,10 +80,9 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
       
       emit(state.copyWith(
         isLoading: false,
-        successMessage: 'Acta registrada exitosamente',
+        successMessage: 'Acta guardada exitosamente',
       ));
       
-      // Reload mesas to update UI state
       add(InitVeedorEvent());
     } catch (e) {
       emit(state.copyWith(
@@ -79,21 +95,21 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
   Future<void> _onCorregirActa(CorregirActaVeedorEvent event, Emitter<VeedorState> emit) async {
     emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
     try {
-      await dataSource.corregirActa(
-        actaId: event.actaId,
+      await repository.corregirActa(
+        actaOriginal: event.actaOriginal,
+        actaLocalId: event.actaLocalId,
         votosBlancos: event.votosBlancos,
         votosNulos: event.votosNulos,
         totalSufragantes: event.totalSufragantes,
-        fotoUrl: event.fotoUrl,
+        fotoLocalPath: event.fotoLocalPath,
         votos: event.votos,
       );
       
       emit(state.copyWith(
         isLoading: false,
-        successMessage: 'Acta corregida exitosamente',
+        successMessage: 'Acta actualizada exitosamente',
       ));
       
-      // We don't automatically know the mesaId here to refetch, but we can re-trigger init
       add(InitVeedorEvent());
     } catch (e) {
       emit(state.copyWith(
@@ -106,16 +122,43 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
   Future<void> _onEliminarActa(EliminarActaVeedorEvent event, Emitter<VeedorState> emit) async {
     emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
     try {
-      await dataSource.eliminarActa(
-        actaId: event.actaId,
+      await repository.eliminarActa(
+        actaLocalId: event.actaLocalId,
         mesaId: event.mesaId,
-        dignidad: '', // se pasa vacío, el datasource usará el path correcto
+        dignidad: event.dignidad,
       );
       emit(state.copyWith(
         isLoading: false,
-        successMessage: 'Acta eliminada correctamente',
+        successMessage: 'Acta eliminada exitosamente',
       ));
       add(InitVeedorEvent());
+    } catch (e) {
+      emit(state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      ));
+    }
+  }
+  
+  Future<void> _onSincronizarPendientes(SincronizarPendientesEvent event, Emitter<VeedorState> emit) async {
+    // Si queremos disparar un sync manual
+    // syncService.syncPendingData() ya maneja el estado;
+    // Esto lo usaremos si inyectamos syncService aquí o lo manejamos desde otro lado.
+    // Para simplificar, la UI puede escuchar al SyncService directamente o el repositorio lo maneja.
+  }
+  
+  Future<void> _onResolverConflicto(ResolverConflictoEvent event, Emitter<VeedorState> emit) async {
+    emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
+    try {
+      await repository.resolverConflicto(
+        actaLocalId: event.actaLocalId,
+        mantenerLocal: event.mantenerLocal,
+      );
+      emit(state.copyWith(
+        isLoading: false,
+        successMessage: 'Conflicto resuelto exitosamente',
+      ));
+      add(InitVeedorEvent()); // Refrescar lista de conflictos y mesas
     } catch (e) {
       emit(state.copyWith(
         isLoading: false,

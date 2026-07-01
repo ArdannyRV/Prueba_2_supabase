@@ -10,8 +10,10 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:connectivity_plus/connectivity_plus.dart' as _i895;
+import 'package:elecciones/core/database/app_database.dart' as _i751;
 import 'package:elecciones/core/di/app_module.dart' as _i1051;
 import 'package:elecciones/core/network/network_info.dart' as _i55;
+import 'package:elecciones/core/sync/sync_service.dart' as _i405;
 import 'package:elecciones/features/auth/data/datasources/auth_remote_data_source.dart'
     as _i26;
 import 'package:elecciones/features/auth/data/repositories/auth_repository_impl.dart'
@@ -68,6 +70,16 @@ import 'package:elecciones/features/provincial_dashboard/presentation/bloc/dashb
     as _i191;
 import 'package:elecciones/features/provincial_dashboard/presentation/bloc/provincial_bloc.dart'
     as _i173;
+import 'package:elecciones/features/veedor_dashboard/data/datasources/veedor_local_data_source.dart'
+    as _i511;
+import 'package:elecciones/features/veedor_dashboard/data/datasources/veedor_remote_data_source.dart'
+    as _i398;
+import 'package:elecciones/features/veedor_dashboard/data/repositories/veedor_repository_impl.dart'
+    as _i376;
+import 'package:elecciones/features/veedor_dashboard/domain/repositories/veedor_repository.dart'
+    as _i708;
+import 'package:elecciones/features/veedor_dashboard/presentation/bloc/veedor_bloc.dart'
+    as _i110;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:supabase_flutter/supabase_flutter.dart' as _i454;
@@ -84,12 +96,17 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final appModule = _$AppModule();
+    gh.lazySingleton<_i751.AppDatabase>(() => _i751.AppDatabase());
     gh.lazySingleton<_i454.SupabaseClient>(() => appModule.supabaseClient);
     gh.lazySingleton<_i895.Connectivity>(() => appModule.connectivity);
     gh.lazySingleton<_i55.NetworkInfo>(
         () => _i55.NetworkInfoImpl(gh<_i895.Connectivity>()));
     gh.lazySingleton<_i395.ProvincialRemoteDataSource>(
         () => _i395.ProvincialRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
+    gh.lazySingleton<_i398.VeedorRemoteDataSource>(
+        () => _i398.VeedorRemoteDataSource(gh<_i454.SupabaseClient>()));
+    gh.lazySingleton<_i511.VeedorLocalDataSource>(
+        () => _i511.VeedorLocalDataSource(gh<_i751.AppDatabase>()));
     gh.lazySingleton<_i26.AuthRemoteDataSource>(
         () => _i26.AuthRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
     gh.lazySingleton<_i558.DashboardRemoteDataSource>(
@@ -98,8 +115,20 @@ extension GetItInjectableX on _i174.GetIt {
           remoteDataSource: gh<_i26.AuthRemoteDataSource>(),
           networkInfo: gh<_i55.NetworkInfo>(),
         ));
+    gh.lazySingleton<_i405.SyncService>(() => _i405.SyncService(
+          localDataSource: gh<_i511.VeedorLocalDataSource>(),
+          remoteDataSource: gh<_i398.VeedorRemoteDataSource>(),
+          networkInfo: gh<_i55.NetworkInfo>(),
+          connectivity: gh<_i895.Connectivity>(),
+        ));
     gh.lazySingleton<_i1038.DashboardRepository>(() =>
         _i324.DashboardRepositoryImpl(gh<_i558.DashboardRemoteDataSource>()));
+    gh.lazySingleton<_i708.VeedorRepository>(() => _i376.VeedorRepositoryImpl(
+          localDataSource: gh<_i511.VeedorLocalDataSource>(),
+          remoteDataSource: gh<_i398.VeedorRemoteDataSource>(),
+          networkInfo: gh<_i55.NetworkInfo>(),
+          syncService: gh<_i405.SyncService>(),
+        ));
     gh.factory<_i249.GetCurrentUser>(
         () => _i249.GetCurrentUser(gh<_i850.AuthRepository>()));
     gh.factory<_i583.ResetPassword>(
@@ -142,6 +171,8 @@ extension GetItInjectableX on _i174.GetIt {
           signOut: gh<_i138.SignOut>(),
           getCurrentUser: gh<_i249.GetCurrentUser>(),
         ));
+    gh.factory<_i110.VeedorBloc>(
+        () => _i110.VeedorBloc(gh<_i708.VeedorRepository>()));
     gh.factory<_i191.DashboardBloc>(
         () => _i191.DashboardBloc(gh<_i925.GetResultadosPorCargoUseCase>()));
     gh.factory<_i173.ProvincialBloc>(() => _i173.ProvincialBloc(

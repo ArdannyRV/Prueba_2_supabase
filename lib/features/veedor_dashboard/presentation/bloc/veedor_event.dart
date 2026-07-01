@@ -10,7 +10,7 @@ class FetchMisActasEvent extends VeedorEvent {
 class RegistrarActaEvent extends VeedorEvent {
   final String mesaId;
   final String dignidad;
-  final String fotoUrl;
+  final String fotoLocalPath;
   final int votosBlancos;
   final int votosNulos;
   final int totalSufragantes;
@@ -21,7 +21,7 @@ class RegistrarActaEvent extends VeedorEvent {
   RegistrarActaEvent({
     required this.mesaId,
     required this.dignidad,
-    required this.fotoUrl,
+    required this.fotoLocalPath,
     required this.votosBlancos,
     required this.votosNulos,
     required this.totalSufragantes,
@@ -32,25 +32,37 @@ class RegistrarActaEvent extends VeedorEvent {
 }
 
 class CorregirActaVeedorEvent extends VeedorEvent {
-  final String actaId;
+  final Map<String, dynamic> actaOriginal;
+  final String actaLocalId;
   final int votosBlancos;
   final int votosNulos;
   final int totalSufragantes;
-  final String? fotoUrl;
+  final String? fotoLocalPath;
   final List<Map<String, dynamic>> votos;
 
   CorregirActaVeedorEvent({
-    required this.actaId,
+    required this.actaOriginal,
+    required this.actaLocalId,
     required this.votosBlancos,
     required this.votosNulos,
     required this.totalSufragantes,
-    this.fotoUrl,
+    this.fotoLocalPath,
     required this.votos,
   });
 }
 
 class EliminarActaVeedorEvent extends VeedorEvent {
-  final String actaId;
+  final String actaLocalId;
   final String mesaId;
-  EliminarActaVeedorEvent({required this.actaId, required this.mesaId});
+  final String dignidad;
+  EliminarActaVeedorEvent({required this.actaLocalId, required this.mesaId, required this.dignidad});
+}
+
+class SincronizarPendientesEvent extends VeedorEvent {}
+
+class ResolverConflictoEvent extends VeedorEvent {
+  final String actaLocalId;
+  final bool mantenerLocal;
+
+  ResolverConflictoEvent({required this.actaLocalId, required this.mantenerLocal});
 }

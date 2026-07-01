@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -52,10 +53,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .eq('id', response.user!.id)
           .maybeSingle();
 
+      final rol = perfil?['rol'] as String?;
+      final debeCambiarPass = perfil?['debe_cambiar_pass'] as bool? ?? false;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (rol != null) await prefs.setString('cached_rol', rol);
+      await prefs.setBool('cached_debe_cambiar_pass', debeCambiarPass);
+
       return UserModel.fromSupabaseUser(
         response.user!,
-        rol: perfil?['rol'] as String?,
-        debeCambiarPass: perfil?['debe_cambiar_pass'] as bool? ?? false,
+        rol: rol,
+        debeCambiarPass: debeCambiarPass,
       );
     } on AuthException catch (e) {
       throw Exception(e.message);
@@ -106,6 +114,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> signOut() async {
     try {
       await supabaseClient.auth.signOut();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('cached_rol');
+      await prefs.remove('cached_debe_cambiar_pass');
     } on AuthException catch (e) {
       throw Exception(e.message);
     } catch (e) {
@@ -119,17 +130,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final user = supabaseClient.auth.currentUser;
       if (user == null) return null;
 
-      // Consultar el perfil igual que en signIn
-      final Map<String, dynamic>? perfil = await supabaseClient
-          .from('perfiles')
-          .select('*')
-          .eq('id', user.id)
-          .maybeSingle();
+      // Consultar el perfil
+      String? rol;
+      bool debeCambiarPass = false;
+      final prefs = await SharedPreferences.getInstance();
+
+      try {
+        final Map<String, dynamic>? perfil = await supabaseClient
+            .from('perfiles')
+            .select('*')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        rol = perfil?['rol'] as String?;
+        debeCambiarPass = perfil?['debe_cambiar_pass'] as bool? ?? false;
+
+        if (rol != null) await prefs.setString('cached_rol', rol);
+        await prefs.setBool('cached_debe_cambiar_pass', debeCambiarPass);
+      } catch (_) {
+        // Fallback a caché local si no hay conexión
+        rol = prefs.getString('cached_rol');
+        debeCambiarPass = prefs.getBool('cached_debe_cambiar_pass') ?? false;
+      }
 
       return UserModel.fromSupabaseUser(
         user,
-        rol: perfil?['rol'] as String?,
-        debeCambiarPass: perfil?['debe_cambiar_pass'] as bool? ?? false,
+        rol: rol,
+        debeCambiarPass: debeCambiarPass,
       );
     } catch (e) {
       throw Exception('Error al obtener usuario actual: $e');

@@ -3,16 +3,17 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/feedback_snackbar.dart';
 import '../../domain/entities/mesa_veedor_entity.dart';
-import '../../data/datasources/veedor_remote_data_source.dart';
 import '../bloc/veedor_bloc.dart';
 import '../bloc/veedor_event.dart';
 import '../bloc/veedor_state.dart';
+import '../../../../core/sync/sync_status.dart';
+import '../widgets/conflicto_acta_sheet.dart';
 
 class MisActasPage extends StatefulWidget {
   final MesaVeedorEntity mesa;
@@ -75,6 +76,10 @@ class _MisActasPageState extends State<MisActasPage> {
         final actas = widget.dignidadInicial != null
             ? state.actasActuales.where((a) => a['dignidad'] == widget.dignidadInicial).toList()
             : state.actasActuales;
+            
+        // Si hay conflictos en esta mesa (que aún no se hayan mergeado a actasActuales), 
+        // los mostramos en la lista de arriba si es que la UI actual no los metió allí por getMisActasLocal
+        final List<Map<String, dynamic>> actasTotales = List.from(actas);
 
         return Scaffold(
           appBar: AppBar(
@@ -97,12 +102,17 @@ class _MisActasPageState extends State<MisActasPage> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.all(16),
-                      itemCount: actas.length,
+                      itemCount: actasTotales.length,
                       itemBuilder: (context, index) {
-                        final acta = actas[index];
-                        final bool corregida = acta['corregida'] ?? false;
+                        final acta = actasTotales[index];
+                        final bool corregida = acta['corregida'] == 1 || acta['corregida'] == true;
                         final List votos = acta['votos_candidatos'] ?? [];
                         final fotoUrl = acta['foto_url'];
+                        final fotoLocalPath = acta['foto_local_path'];
+                        final bool hasLocalPhoto = fotoLocalPath != null && File(fotoLocalPath).existsSync();
+                        final String syncStatusStr = acta['sync_status'] ?? SyncStatus.synced.toDb();
+                        final bool isConflict = syncStatusStr == SyncStatus.conflict.toDb();
+                        final bool isPending = syncStatusStr.startsWith('pending');
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16),
@@ -115,8 +125,11 @@ class _MisActasPageState extends State<MisActasPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  alignment: WrapAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       acta['dignidad'] == 'alcaldia' ? 'Alcaldía' : 'Prefectura',
@@ -125,6 +138,57 @@ class _MisActasPageState extends State<MisActasPage> {
                                             color: AppTheme.flagBlue,
                                           ),
                                     ),
+                                    if (isConflict)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red.shade50,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.red.shade200),
+                                        ),
+                                        child: Text(
+                                          '¡Conflicto!',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.red.shade800,
+                                          ),
+                                        ),
+                                      )
+                                    else if (isPending)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.yellow.shade50,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.yellow.shade400),
+                                        ),
+                                        child: Text(
+                                          'Pendiente',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.yellow.shade900,
+                                          ),
+                                        ),
+                                      )
+                                    else
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.green.shade50,
+                                          borderRadius: BorderRadius.circular(4),
+                                          border: Border.all(color: Colors.green.shade200),
+                                        ),
+                                        child: Text(
+                                          'Sincronizada',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.green.shade800,
+                                          ),
+                                        ),
+                                      ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
@@ -158,7 +222,19 @@ class _MisActasPageState extends State<MisActasPage> {
                                     ],
                                   ),
                                 const SizedBox(height: 12),
-                                if (fotoUrl != null)
+                                if (hasLocalPhoto)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                      child: Image.file(
+                                        File(fotoLocalPath!),
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        errorBuilder: (context, error, stackTrace) => const Center(
+                                          child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                                        ),
+                                      ),
+                                  )
+                                else if (fotoUrl != null && fotoUrl.toString().isNotEmpty)
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                       child: Image.network(
@@ -217,24 +293,43 @@ class _MisActasPageState extends State<MisActasPage> {
                                   );
                                 }).toList(),
                                 const SizedBox(height: 16),
-                                OutlinedButton.icon(
-                                  icon: const Icon(Icons.edit),
-                                  label: const Text('Corregir esta acta'),
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppTheme.flagBlue,
-                                    side: const BorderSide(color: AppTheme.flagBlue),
-                                  ),
-                                  onPressed: () => _showCorregirActaSheet(context, acta),
-                                ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  icon: const Icon(Icons.delete_forever, color: Colors.red),
-                                  label: const Text('Eliminar acta', style: TextStyle(color: Colors.red)),
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: Colors.red),
-                                  ),
-                                  onPressed: () => _showEliminarActaDialog(context, acta),
-                                ),
+                                    if (isConflict)
+                                      OutlinedButton.icon(
+                                        icon: const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+                                        label: const Text('Resolver Conflicto', style: TextStyle(color: Colors.orange)),
+                                        style: OutlinedButton.styleFrom(
+                                          side: const BorderSide(color: Colors.orange),
+                                        ),
+                                        onPressed: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            isScrollControlled: true,
+                                            builder: (_) => BlocProvider.value(
+                                              value: context.read<VeedorBloc>(),
+                                              child: ConflictoActaSheet(actaLocal: acta),
+                                            ),
+                                          );
+                                        },
+                                      )
+                                    else
+                                      OutlinedButton.icon(
+                                        icon: const Icon(Icons.edit),
+                                        label: const Text('Corregir esta acta'),
+                                        style: OutlinedButton.styleFrom(
+                                          foregroundColor: AppTheme.flagBlue,
+                                          side: const BorderSide(color: AppTheme.flagBlue),
+                                        ),
+                                        onPressed: () => _showCorregirActaSheet(context, acta),
+                                      ),
+                                    const SizedBox(height: 8),
+                                    OutlinedButton.icon(
+                                      icon: const Icon(Icons.delete_forever, color: Colors.red),
+                                      label: const Text('Eliminar acta', style: TextStyle(color: Colors.red)),
+                                      style: OutlinedButton.styleFrom(
+                                        side: const BorderSide(color: Colors.red),
+                                      ),
+                                      onPressed: () => _showEliminarActaDialog(context, acta),
+                                    ),
                               ],
                             ),
                           ),
@@ -392,13 +487,6 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
     setState(() => _guardando = true);
     
     try {
-      String? nuevaFotoUrl;
-      if (_foto != null) {
-        final ds = VeedorRemoteDataSource(Supabase.instance.client);
-        final bytes = await _foto!.readAsBytes();
-        nuevaFotoUrl = await ds.subirFoto(widget.mesa.id, widget.acta['dignidad'], bytes);
-      }
-
       final votos = List.generate(_votosOriginales.length, (i) => {
         'candidato_id': _votosOriginales[i]['candidatos']['id'],
         'cantidad': int.tryParse(_votosControllers[i].text) ?? 0,
@@ -406,11 +494,12 @@ class _CorregirActaBottomSheetState extends State<CorregirActaBottomSheet> {
 
       if (mounted) {
         context.read<VeedorBloc>().add(CorregirActaVeedorEvent(
-          actaId: widget.acta['id'],
+          actaOriginal: widget.acta,
+          actaLocalId: widget.acta['id'],
           votosBlancos: blancos,
           votosNulos: nulos,
           totalSufragantes: total,
-          fotoUrl: nuevaFotoUrl,
+          fotoLocalPath: _foto?.path,
           votos: votos,
         ));
         context.read<VeedorBloc>().add(FetchMisActasEvent(widget.mesa.id));
@@ -747,8 +836,9 @@ class _EliminarActaDialogState extends State<_EliminarActaDialog> {
           onPressed: _puedeConfirmar
               ? () {
                   context.read<VeedorBloc>().add(EliminarActaVeedorEvent(
-                    actaId: widget.acta['id'],
+                    actaLocalId: widget.acta['id'],
                     mesaId: widget.mesa.id,
+                    dignidad: widget.acta['dignidad'],
                   ));
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();

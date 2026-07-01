@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/feedback_snackbar.dart';
+import '../../../../injection_container.dart';
 import '../../domain/entities/mesa_veedor_entity.dart';
-import '../../data/datasources/veedor_remote_data_source.dart';
+import '../../domain/repositories/veedor_repository.dart';
 import '../bloc/veedor_bloc.dart';
 import 'captura_evidencia_page.dart';
 
@@ -36,8 +36,8 @@ class _RegistroActaPageState extends State<RegistroActaPage> {
 
   Future<void> _cargarCandidatos() async {
     try {
-      final ds = VeedorRemoteDataSource(Supabase.instance.client);
-      final candidatos = await ds.getCandidatos(widget.dignidad);
+      final repo = getIt<VeedorRepository>();
+      final candidatos = await repo.getCandidatos(widget.dignidad);
       if (mounted) {
         setState(() {
           _candidatos = candidatos;
@@ -49,7 +49,7 @@ class _RegistroActaPageState extends State<RegistroActaPage> {
       }
     } catch (e) {
       if (mounted) {
-        FeedbackSnackbar.showError(context, 'Error al cargar candidatos: $e');
+        FeedbackSnackbar.showError(context, e.toString().replaceAll('Exception: ', ''));
         setState(() => _isLoading = false);
       }
     }
