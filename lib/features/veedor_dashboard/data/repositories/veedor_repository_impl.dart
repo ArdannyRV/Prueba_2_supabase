@@ -87,6 +87,7 @@ class VeedorRepositoryImpl implements VeedorRepository {
                   'cantidad': v['cantidad'],
                 }).toList(),
                 status: SyncStatus.synced,
+                corregida: actaR['corregida'] == true || actaR['corregida'] == 1,
               );
             }
           }
@@ -203,6 +204,7 @@ class VeedorRepositoryImpl implements VeedorRepository {
       fotoLocalPath: fotoLocalPath,
       votos: votos,
       status: SyncStatus.pendingUpdate,
+      corregida: true,
     );
     await syncService.syncPendingData();
   }
@@ -255,6 +257,7 @@ class VeedorRepositoryImpl implements VeedorRepository {
             fotoUrl: serverData['foto_url'],
             votos: (serverData['votos_candidatos'] as List).cast<Map<String, dynamic>>(),
             status: SyncStatus.synced,
+            corregida: serverData['corregida'] == true || serverData['corregida'] == 1,
           );
         }
       }

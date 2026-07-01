@@ -140,7 +140,7 @@ class _MisActasPageState extends State<MisActasPage> {
                                     ),
                                     if (isConflict)
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: Colors.red.shade50,
                                           borderRadius: BorderRadius.circular(4),
@@ -149,7 +149,7 @@ class _MisActasPageState extends State<MisActasPage> {
                                         child: Text(
                                           '¡Conflicto!',
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.red.shade800,
                                           ),
@@ -157,7 +157,7 @@ class _MisActasPageState extends State<MisActasPage> {
                                       )
                                     else if (isPending)
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: Colors.yellow.shade50,
                                           borderRadius: BorderRadius.circular(4),
@@ -166,7 +166,7 @@ class _MisActasPageState extends State<MisActasPage> {
                                         child: Text(
                                           'Pendiente',
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.yellow.shade900,
                                           ),
@@ -174,7 +174,7 @@ class _MisActasPageState extends State<MisActasPage> {
                                       )
                                     else
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
                                           color: Colors.green.shade50,
                                           borderRadius: BorderRadius.circular(4),
@@ -183,14 +183,14 @@ class _MisActasPageState extends State<MisActasPage> {
                                         child: Text(
                                           'Sincronizada',
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 10,
                                             fontWeight: FontWeight.w600,
                                             color: Colors.green.shade800,
                                           ),
                                         ),
                                       ),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: corregida ? Colors.orange.shade50 : Colors.blue.shade50,
                                         borderRadius: BorderRadius.circular(4),
@@ -201,7 +201,7 @@ class _MisActasPageState extends State<MisActasPage> {
                                       child: Text(
                                         corregida ? 'Corregida' : 'Original',
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 10,
                                           fontWeight: FontWeight.w600,
                                           color: corregida ? Colors.orange.shade800 : Colors.blue.shade800,
                                         ),

@@ -159,6 +159,7 @@ class VeedorLocalDataSource {
     String? fotoUrl,
     required List<Map<String, dynamic>> votos,
     required SyncStatus status,
+    required bool corregida,
   }) async {
     if (localId.isEmpty) {
       throw ArgumentError('El localId no puede estar vacío en actualizarActaLocal');
@@ -171,7 +172,7 @@ class VeedorLocalDataSource {
         'votos_blancos': votosBlancos,
         'votos_nulos': votosNulos,
         'total_sufragantes': totalSufragantes,
-        'corregida': 1,
+        'corregida': corregida ? 1 : 0,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
         'sync_status': status.toDb(),
       };

@@ -3,11 +3,29 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/feedback_snackbar.dart';
 import '../bloc/veedor_bloc.dart';
+import '../bloc/veedor_event.dart';
 import '../bloc/veedor_state.dart';
 import 'seleccionar_dignidad_page.dart';
 
-class MisMesasVeedorPage extends StatelessWidget {
+class MisMesasVeedorPage extends StatefulWidget {
   const MisMesasVeedorPage({super.key});
+
+  @override
+  State<MisMesasVeedorPage> createState() => _MisMesasVeedorPageState();
+}
+
+class _MisMesasVeedorPageState extends State<MisMesasVeedorPage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<VeedorBloc>().add(InitVeedorEvent());
+  }
+
+  Future<void> _onRefresh() async {
+    context.read<VeedorBloc>().add(InitVeedorEvent());
+    // Esperar un momento para que el RefreshIndicator se muestre animado
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,98 +46,112 @@ class MisMesasVeedorPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
+        Widget content;
         if (state.mesas.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.table_bar, size: 64, color: Colors.grey.shade400),
-                const SizedBox(height: 16),
-                Text(
-                  'No tienes mesas asignadas.',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade600,
+          content = CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.table_bar, size: 64, color: Colors.grey.shade400),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No tienes mesas asignadas.',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey.shade600,
+                            ),
                       ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          );
+        } else {
+          content = ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(12),
+            itemCount: state.mesas.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final mesa = state.mesas[index];
+
+              final Color bordeColor;
+              if (mesa.tieneAmbasActas) {
+                bordeColor = AppTheme.flagBlue;
+              } else if (mesa.tieneActaAlcaldia || mesa.tieneActaPrefectura) {
+                bordeColor = AppTheme.flagYellow;
+              } else {
+                bordeColor = AppTheme.flagRed;
+              }
+
+              return Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(left: BorderSide(color: bordeColor, width: 4)),
+                    ),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.only(left: 10, right: 6, top: 0, bottom: 0),
+                      leading: const CircleAvatar(
+                        backgroundColor: Color(0xFFF0F4FA),
+                        child: Icon(Icons.table_chart, color: AppTheme.flagBlue),
+                      ),
+                      title: Text('Mesa N°${mesa.numeroMesa}',
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 2),
+                          Text(mesa.recintoNombre, style: const TextStyle(fontSize: 13)),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: _buildStatusChip('Alcaldía', mesa.tieneActaAlcaldia),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                fit: FlexFit.loose,
+                                child: _buildStatusChip('Prefectura', mesa.tieneActaPrefectura),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<VeedorBloc>(),
+                              child: SeleccionarDignidadPage(mesa: mesa),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
           );
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(12),
-          itemCount: state.mesas.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
-            final mesa = state.mesas[index];
-
-            final Color bordeColor;
-            if (mesa.tieneAmbasActas) {
-              bordeColor = AppTheme.flagBlue;
-            } else if (mesa.tieneActaAlcaldia || mesa.tieneActaPrefectura) {
-              bordeColor = AppTheme.flagYellow;
-            } else {
-              bordeColor = AppTheme.flagRed;
-            }
-
-            return Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Container(
-                  decoration: BoxDecoration(
-                    border: Border(left: BorderSide(color: bordeColor, width: 4)),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.only(left: 10, right: 6, top: 0, bottom: 0),
-                    leading: const CircleAvatar(
-                      backgroundColor: Color(0xFFF0F4FA),
-                      child: Icon(Icons.table_chart, color: AppTheme.flagBlue),
-                    ),
-                    title: Text('Mesa N°${mesa.numeroMesa}',
-                        style: const TextStyle(fontWeight: FontWeight.w600)),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 2),
-                        Text(mesa.recintoNombre, style: const TextStyle(fontSize: 13)),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Flexible(
-                              fit: FlexFit.loose,
-                              child: _buildStatusChip('Alcaldía', mesa.tieneActaAlcaldia),
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              fit: FlexFit.loose,
-                              child: _buildStatusChip('Prefectura', mesa.tieneActaPrefectura),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BlocProvider.value(
-                            value: context.read<VeedorBloc>(),
-                            child: SeleccionarDignidadPage(mesa: mesa),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            );
-          },
+        return RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: content,
         );
       },
     );
