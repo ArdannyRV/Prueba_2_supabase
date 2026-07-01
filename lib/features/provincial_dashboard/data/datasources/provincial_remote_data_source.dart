@@ -52,7 +52,7 @@ class ProvincialRemoteDataSourceImpl implements ProvincialRemoteDataSource {
     try {
       final response = await supabaseClient
           .from('recintos')
-          .select('*, mesas(*, actas(id, latitud, longitud)), coordinador:perfiles!coordinador_id(nombres, apellidos)')
+          .select('*, mesas(*, perfiles!veedor_id(nombres, apellidos), actas(*, votos_candidatos(candidato_id, cantidad, candidatos(id, nombre_candidato, organizacion_politica, dignidad)))), coordinador:perfiles!coordinador_id(nombres, apellidos)')
           .order('nombre');
 
       return (response as List)

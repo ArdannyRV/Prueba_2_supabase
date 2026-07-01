@@ -43,21 +43,25 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  String? _resolverMensajeError(String message) {
+    final msg = message.toLowerCase();
+    if (msg.contains('invalid') ||
+        msg.contains('credentials') ||
+        msg.contains('password') ||
+        msg.contains('user not found') ||
+        msg.contains('email')) {
+      return 'Correo o contraseña incorrectos. Por favor verifica tus datos e intenta de nuevo.';
+    }
+    return 'No se pudo iniciar sesión. Por favor intenta de nuevo.';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
-          if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Theme.of(context).colorScheme.error,
-              ),
-            );
-          } else if (state is AuthAuthenticated) {
+          if (state is AuthAuthenticated) {
             final user = state.user;
-            
             if (user.debeCambiarPass) {
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(builder: (_) => const ChangeInitialPasswordPage()),
@@ -86,13 +90,15 @@ class _LoginPageState extends State<LoginPage> {
                       backgroundColor: Theme.of(context).colorScheme.error,
                     ),
                   );
-                  break;
               }
             }
           }
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
+          final errorMessage = state is AuthError
+              ? _resolverMensajeError(state.message)
+              : null;
 
           return LoadingOverlay(
             isLoading: isLoading,
@@ -106,15 +112,10 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Sello institucional
                         const FlagStripe(),
                         const SizedBox(height: 32),
-                        const Center(
-                          child: IconBadge(icon: Icons.how_to_vote),
-                        ),
+                        const Center(child: IconBadge(icon: Icons.how_to_vote)),
                         const SizedBox(height: 24),
-
-                        // Título
                         Text(
                           'Bienvenido',
                           style: Theme.of(context).textTheme.displayMedium,
@@ -127,8 +128,6 @@ class _LoginPageState extends State<LoginPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 48),
-
-                        // Email field
                         CustomTextField(
                           controller: _emailController,
                           label: 'Correo electrónico',
@@ -136,18 +135,12 @@ class _LoginPageState extends State<LoginPage> {
                           prefixIcon: Icons.email_outlined,
                           keyboardType: TextInputType.emailAddress,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingresa tu correo';
-                            }
-                            if (!value.contains('@')) {
-                              return 'Por favor ingresa un correo válido';
-                            }
+                            if (value == null || value.isEmpty) return 'Por favor ingresa tu correo';
+                            if (!value.contains('@')) return 'Por favor ingresa un correo válido';
                             return null;
                           },
                         ),
                         const SizedBox(height: 16),
-
-                        // Password field
                         CustomTextField(
                           controller: _passwordController,
                           label: 'Contraseña',
@@ -155,28 +148,18 @@ class _LoginPageState extends State<LoginPage> {
                           prefixIcon: Icons.lock_outline,
                           isPassword: true,
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingresa tu contraseña';
-                            }
-                            if (value.length < 6) {
-                              return 'La contraseña debe tener al menos 6 caracteres';
-                            }
+                            if (value == null || value.isEmpty) return 'Por favor ingresa tu contraseña';
+                            if (value.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
                             return null;
                           },
                         ),
                         const SizedBox(height: 8),
-
-                        // Forgot password
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const ResetPasswordPage(),
-                                ),
-                              );
-                            },
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const ResetPasswordPage()),
+                            ),
                             child: Text(
                               '¿Olvidaste tu contraseña?',
                               style: TextStyle(
@@ -186,9 +169,32 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
-
-                        // Login button
+                        const SizedBox(height: 16),
+                        if (errorMessage != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade50,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.red.shade200),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline,
+                                    color: Colors.red.shade700, size: 20),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    errorMessage,
+                                    style: TextStyle(
+                                        color: Colors.red.shade700, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         SizedBox(
                           height: 56,
                           child: ElevatedButton(
@@ -196,8 +202,6 @@ class _LoginPageState extends State<LoginPage> {
                             child: const Text('Iniciar sesión'),
                           ),
                         ),
-                        
-                        // NOTA: Se eliminó completamente la sección de "¿No tienes cuenta? Regístrate"
                       ],
                     ),
                   ),

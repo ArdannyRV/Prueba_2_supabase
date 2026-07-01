@@ -100,17 +100,93 @@ class _CapturaEvidenciaPageState extends State<CapturaEvidenciaPage> {
   Future<void> _guardar() async {
     setState(() => _guardando = true);
     try {
-      // Solicitar permisos de GPS si no los tiene
+      // Verificar si el servicio de ubicación está activo
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              title: const Row(children: [
+                Icon(Icons.location_off, color: Colors.red),
+                SizedBox(width: 8),
+                Text('GPS desactivado'),
+              ]),
+              content: const Text(
+                'El GPS de tu dispositivo está apagado. '
+                'Actívalo en la configuración del dispositivo para poder registrar el acta.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Geolocator.openLocationSettings();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Abrir configuración'),
+                ),
+              ],
+            ),
+          );
+        }
+        setState(() => _guardando = false);
+        return;
+      }
+
+      // Verificar permisos
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          throw Exception('Los permisos de ubicación fueron denegados');
+          if (mounted) {
+            FeedbackSnackbar.showError(
+              context,
+              'Permiso de ubicación denegado. La app necesita tu ubicación para registrar el acta. Por favor, otorga el permiso cuando se solicite.',
+            );
+          }
+          setState(() => _guardando = false);
+          return;
         }
       }
-      
+
       if (permission == LocationPermission.deniedForever) {
-        throw Exception('Los permisos de ubicación están denegados permanentemente');
+        if (mounted) {
+          await showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => AlertDialog(
+              title: const Row(children: [
+                Icon(Icons.location_disabled, color: Colors.red),
+                SizedBox(width: 8),
+                Text('Permiso bloqueado'),
+              ]),
+              content: const Text(
+                'El permiso de ubicación está bloqueado permanentemente. '
+                'Para continuar, ve a Configuración → Aplicaciones → '
+                'esta app → Permisos → Ubicación y actívalo manualmente.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Geolocator.openAppSettings();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Abrir configuración'),
+                ),
+              ],
+            ),
+          );
+        }
+        setState(() => _guardando = false);
+        return;
       }
 
       // GPS

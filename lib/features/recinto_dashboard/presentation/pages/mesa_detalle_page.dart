@@ -65,12 +65,22 @@ class _MesaDetallePageState extends State<MesaDetallePage> {
                       mesa.corregida == true ? 'Registrada y corregida' : 'Registrada',
                       style: textTheme.titleSmall?.copyWith(color: AppTheme.successColor),
                     ),
-                    if (mesa.latitud != null && mesa.longitud != null) ...[
+                    if (mesa.latitudAlcaldia != null && mesa.longitudAlcaldia != null) ...[
                       const SizedBox(height: 8),
-                      Text('Ubicación GPS', style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600)),
+                      Text('Ubicación GPS - Alcaldía',
+                          style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600)),
                       const SizedBox(height: 2),
-                      Text('${mesa.latitud}, ${mesa.longitud}', style: textTheme.bodySmall),
-                    ]
+                      Text('${mesa.latitudAlcaldia}, ${mesa.longitudAlcaldia}',
+                          style: textTheme.bodySmall),
+                    ],
+                    if (mesa.latitudPrefectura != null && mesa.longitudPrefectura != null) ...[
+                      const SizedBox(height: 8),
+                      Text('Ubicación GPS - Prefectura',
+                          style: textTheme.bodySmall?.copyWith(color: Colors.grey.shade600)),
+                      const SizedBox(height: 2),
+                      Text('${mesa.latitudPrefectura}, ${mesa.longitudPrefectura}',
+                          style: textTheme.bodySmall),
+                    ],
                   ],
                 ),
               ),

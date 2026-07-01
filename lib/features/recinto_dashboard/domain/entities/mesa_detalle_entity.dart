@@ -12,8 +12,10 @@ class MesaDetalleEntity {
   final int? totalSufragantes;
   final String? fotoUrlAlcaldia;
   final String? fotoUrlPrefectura;
-  final double? latitud;
-  final double? longitud;
+  final double? latitudAlcaldia;
+  final double? longitudAlcaldia;
+  final double? latitudPrefectura;
+  final double? longitudPrefectura;
   final bool? corregida;
   
   // Votos por dignidad
@@ -32,8 +34,10 @@ class MesaDetalleEntity {
     this.totalSufragantes,
     this.fotoUrlAlcaldia,
     this.fotoUrlPrefectura,
-    this.latitud,
-    this.longitud,
+    this.latitudAlcaldia,
+    this.longitudAlcaldia,
+    this.latitudPrefectura,
+    this.longitudPrefectura,
     this.corregida,
     this.votosAlcaldia = const [],
     this.votosPrefectura = const [],

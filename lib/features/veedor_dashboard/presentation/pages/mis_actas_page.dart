@@ -145,7 +145,19 @@ class _MisActasPageState extends State<MisActasPage> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 4),
+                                if (acta['latitud'] != null && acta['longitud'] != null)
+                                  Row(
+                                    children: [
+                                      Icon(Icons.location_on, size: 14, color: Colors.grey.shade500),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'GPS: ${(acta['latitud'] as num).toStringAsFixed(6)}, ${(acta['longitud'] as num).toStringAsFixed(6)}',
+                                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                      ),
+                                    ],
+                                  ),
+                                const SizedBox(height: 12),
                                 if (fotoUrl != null)
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),

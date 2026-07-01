@@ -63,8 +63,10 @@ class RecintoCoordRemoteDataSource {
       int? totalSufragantes;
       String? fotoUrlAlcaldia;
       String? fotoUrlPrefectura;
-      double? latitud;
-      double? longitud;
+      double? latitudAlcaldia;
+      double? longitudAlcaldia;
+      double? latitudPrefectura;
+      double? longitudPrefectura;
       bool? corregida;
       
       List<Map<String, dynamic>> votosAlcaldia = [];
@@ -76,16 +78,22 @@ class RecintoCoordRemoteDataSource {
         votosBlancos = primeraActa['votos_blancos'];
         votosNulos = primeraActa['votos_nulos'];
         totalSufragantes = primeraActa['total_sufragantes'];
-        latitud = primeraActa['latitud'] != null ? (primeraActa['latitud'] as num).toDouble() : null;
-        longitud = primeraActa['longitud'] != null ? (primeraActa['longitud'] as num).toDouble() : null;
         corregida = primeraActa['corregida'];
 
         for (final acta in actas) {
           final dignidad = acta['dignidad'] as String?;
           final foto = acta['foto_url'] as String?;
 
-          if (dignidad == 'alcaldia') fotoUrlAlcaldia = foto;
-          if (dignidad == 'prefectura') fotoUrlPrefectura = foto;
+          if (dignidad == 'alcaldia') {
+            fotoUrlAlcaldia = foto;
+            latitudAlcaldia = acta['latitud'] != null ? (acta['latitud'] as num).toDouble() : null;
+            longitudAlcaldia = acta['longitud'] != null ? (acta['longitud'] as num).toDouble() : null;
+          }
+          if (dignidad == 'prefectura') {
+            fotoUrlPrefectura = foto;
+            latitudPrefectura = acta['latitud'] != null ? (acta['latitud'] as num).toDouble() : null;
+            longitudPrefectura = acta['longitud'] != null ? (acta['longitud'] as num).toDouble() : null;
+          }
 
           final List votos = acta['votos_candidatos'] ?? [];
           for (final voto in votos) {
@@ -120,8 +128,10 @@ class RecintoCoordRemoteDataSource {
         totalSufragantes: totalSufragantes,
         fotoUrlAlcaldia: fotoUrlAlcaldia,
         fotoUrlPrefectura: fotoUrlPrefectura,
-        latitud: latitud,
-        longitud: longitud,
+        latitudAlcaldia: latitudAlcaldia,
+        longitudAlcaldia: longitudAlcaldia,
+        latitudPrefectura: latitudPrefectura,
+        longitudPrefectura: longitudPrefectura,
         corregida: corregida,
         votosAlcaldia: votosAlcaldia,
         votosPrefectura: votosPrefectura,
