@@ -77,39 +77,24 @@ class _MesaDetallePageState extends State<MesaDetallePage> {
             ),
             const SizedBox(height: 16),
 
-            // Foto
-            Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade200,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: mesa.fotoUrl != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: Image.network(mesa.fotoUrl!, fit: BoxFit.cover),
-                    )
-                  : const Center(
-                      child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
-                    ),
-            ),
-            const SizedBox(height: 24),
-
             // Alcaldía
             if (mesa.votosAlcaldia.isNotEmpty) ...[
               Text('Alcaldía', style: textTheme.titleMedium),
               const SizedBox(height: 8),
+              _buildFoto(mesa.fotoUrlAlcaldia),
+              const SizedBox(height: 12),
               _buildTablaVotos(mesa.votosAlcaldia),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
             ],
 
             // Prefectura
             if (mesa.votosPrefectura.isNotEmpty) ...[
               Text('Prefectura', style: textTheme.titleMedium),
               const SizedBox(height: 8),
+              _buildFoto(mesa.fotoUrlPrefectura),
+              const SizedBox(height: 12),
               _buildTablaVotos(mesa.votosPrefectura),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
             ],
 
             // Totales
@@ -143,6 +128,32 @@ class _MesaDetallePageState extends State<MesaDetallePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFoto(String? url) {
+    return Container(
+      height: 200,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: url != null
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.network(
+                '$url?t=${DateTime.now().millisecondsSinceEpoch}',
+                fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (context, error, stackTrace) => const Center(
+                  child: Icon(Icons.broken_image, size: 48, color: Colors.grey),
+                ),
+              ),
+            )
+          : const Center(
+              child: Icon(Icons.image_not_supported, size: 48, color: Colors.grey),
+            ),
     );
   }
 

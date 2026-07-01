@@ -10,7 +10,8 @@ class MesaDetalleEntity {
   final int? votosBlancos;
   final int? votosNulos;
   final int? totalSufragantes;
-  final String? fotoUrl;
+  final String? fotoUrlAlcaldia;
+  final String? fotoUrlPrefectura;
   final double? latitud;
   final double? longitud;
   final bool? corregida;
@@ -29,7 +30,8 @@ class MesaDetalleEntity {
     this.votosBlancos,
     this.votosNulos,
     this.totalSufragantes,
-    this.fotoUrl,
+    this.fotoUrlAlcaldia,
+    this.fotoUrlPrefectura,
     this.latitud,
     this.longitud,
     this.corregida,

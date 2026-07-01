@@ -61,7 +61,8 @@ class RecintoCoordRemoteDataSource {
       int? votosBlancos;
       int? votosNulos;
       int? totalSufragantes;
-      String? fotoUrl;
+      String? fotoUrlAlcaldia;
+      String? fotoUrlPrefectura;
       double? latitud;
       double? longitud;
       bool? corregida;
@@ -70,35 +71,37 @@ class RecintoCoordRemoteDataSource {
       List<Map<String, dynamic>> votosPrefectura = [];
 
       if (tieneActa) {
-        // Tomar datos generales del primer acta
         final primeraActa = actas.first;
         actaId = primeraActa['id'];
         votosBlancos = primeraActa['votos_blancos'];
         votosNulos = primeraActa['votos_nulos'];
         totalSufragantes = primeraActa['total_sufragantes'];
-        fotoUrl = primeraActa['foto_url'];
         latitud = primeraActa['latitud'] != null ? (primeraActa['latitud'] as num).toDouble() : null;
         longitud = primeraActa['longitud'] != null ? (primeraActa['longitud'] as num).toDouble() : null;
         corregida = primeraActa['corregida'];
 
-        // Recopilar votos de todas las actas
         for (final acta in actas) {
+          final dignidad = acta['dignidad'] as String?;
+          final foto = acta['foto_url'] as String?;
+
+          if (dignidad == 'alcaldia') fotoUrlAlcaldia = foto;
+          if (dignidad == 'prefectura') fotoUrlPrefectura = foto;
+
           final List votos = acta['votos_candidatos'] ?? [];
           for (final voto in votos) {
             final cand = voto['candidatos'];
             if (cand == null) continue;
-            
-            final dignidad = cand['dignidad'];
+
             final mapVoto = {
               'candidato_id': cand['id'] ?? voto['candidato_id'],
               'nombre_candidato': cand['nombre_candidato'],
               'organizacion_politica': cand['organizacion_politica'],
               'cantidad': voto['cantidad'],
             };
-            
-            if (dignidad == 'alcaldia') {
+
+            if (cand['dignidad'] == 'alcaldia') {
               votosAlcaldia.add(mapVoto);
-            } else if (dignidad == 'prefectura') {
+            } else if (cand['dignidad'] == 'prefectura') {
               votosPrefectura.add(mapVoto);
             }
           }
@@ -115,7 +118,8 @@ class RecintoCoordRemoteDataSource {
         votosBlancos: votosBlancos,
         votosNulos: votosNulos,
         totalSufragantes: totalSufragantes,
-        fotoUrl: fotoUrl,
+        fotoUrlAlcaldia: fotoUrlAlcaldia,
+        fotoUrlPrefectura: fotoUrlPrefectura,
         latitud: latitud,
         longitud: longitud,
         corregida: corregida,
