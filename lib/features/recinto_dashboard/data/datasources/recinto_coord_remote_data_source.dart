@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/email_service.dart';
 import '../../domain/entities/mesa_detalle_entity.dart';
@@ -57,56 +58,58 @@ class RecintoCoordRemoteDataSource {
       final List actas = row['actas'] ?? [];
       final bool tieneActa = actas.isNotEmpty;
       
-      String? actaId;
-      int? votosBlancos;
-      int? votosNulos;
-      int? totalSufragantes;
-      String? fotoUrlAlcaldia;
-      String? fotoUrlPrefectura;
-      double? latitudAlcaldia;
-      double? longitudAlcaldia;
-      double? latitudPrefectura;
-      double? longitudPrefectura;
+      String? actaIdAlcaldia;
+      String? actaIdPrefectura;
+      int? votosBlaancosAlcaldia, votosNulosAlcaldia, totalSufragantesAlcaldia;
+      int? votosBlaancosPrefectura, votosNulosPrefectura, totalSufragantesPrefectura;
+      String? fotoUrlAlcaldia, fotoUrlPrefectura;
+      double? latitudAlcaldia, longitudAlcaldia;
+      double? latitudPrefectura, longitudPrefectura;
       bool? corregida;
       
       List<Map<String, dynamic>> votosAlcaldia = [];
       List<Map<String, dynamic>> votosPrefectura = [];
 
       if (tieneActa) {
-        final primeraActa = actas.first;
-        actaId = primeraActa['id'];
-        votosBlancos = primeraActa['votos_blancos'];
-        votosNulos = primeraActa['votos_nulos'];
-        totalSufragantes = primeraActa['total_sufragantes'];
-        corregida = primeraActa['corregida'];
+        corregida = actas.any((a) => a['corregida'] == true);
 
         for (final acta in actas) {
           final dignidad = acta['dignidad'] as String?;
           final foto = acta['foto_url'] as String?;
+          final lat = (acta['latitud'] as num?)?.toDouble();
+          final lng = (acta['longitud'] as num?)?.toDouble();
+          final blancos = acta['votos_blancos'] as int?;
+          final nulos = acta['votos_nulos'] as int?;
+          final total = acta['total_sufragantes'] as int?;
 
           if (dignidad == 'alcaldia') {
+            actaIdAlcaldia = acta['id'];
             fotoUrlAlcaldia = foto;
-            latitudAlcaldia = acta['latitud'] != null ? (acta['latitud'] as num).toDouble() : null;
-            longitudAlcaldia = acta['longitud'] != null ? (acta['longitud'] as num).toDouble() : null;
-          }
-          if (dignidad == 'prefectura') {
+            latitudAlcaldia = lat;
+            longitudAlcaldia = lng;
+            votosBlaancosAlcaldia = blancos;
+            votosNulosAlcaldia = nulos;
+            totalSufragantesAlcaldia = total;
+          } else if (dignidad == 'prefectura') {
+            actaIdPrefectura = acta['id'];
             fotoUrlPrefectura = foto;
-            latitudPrefectura = acta['latitud'] != null ? (acta['latitud'] as num).toDouble() : null;
-            longitudPrefectura = acta['longitud'] != null ? (acta['longitud'] as num).toDouble() : null;
+            latitudPrefectura = lat;
+            longitudPrefectura = lng;
+            votosBlaancosPrefectura = blancos;
+            votosNulosPrefectura = nulos;
+            totalSufragantesPrefectura = total;
           }
 
           final List votos = acta['votos_candidatos'] ?? [];
           for (final voto in votos) {
             final cand = voto['candidatos'];
             if (cand == null) continue;
-
             final mapVoto = {
               'candidato_id': cand['id'] ?? voto['candidato_id'],
               'nombre_candidato': cand['nombre_candidato'],
               'organizacion_politica': cand['organizacion_politica'],
               'cantidad': voto['cantidad'],
             };
-
             if (cand['dignidad'] == 'alcaldia') {
               votosAlcaldia.add(mapVoto);
             } else if (cand['dignidad'] == 'prefectura') {
@@ -118,21 +121,25 @@ class RecintoCoordRemoteDataSource {
 
       return MesaDetalleEntity(
         id: id,
-        numeroMesa: numeroMesa,
-        veedorId: veedorId,
+        numeroMesa: row['numero_mesa'],
+        veedorId: row['veedor_id'],
         veedorNombre: veedorNombre,
         tieneActa: tieneActa,
-        actaId: actaId,
-        votosBlancos: votosBlancos,
-        votosNulos: votosNulos,
-        totalSufragantes: totalSufragantes,
+        corregida: corregida,
+        actaIdAlcaldia: actaIdAlcaldia,
+        actaIdPrefectura: actaIdPrefectura,
+        votosBlaancosAlcaldia: votosBlaancosAlcaldia,
+        votosNulosAlcaldia: votosNulosAlcaldia,
+        totalSufragantesAlcaldia: totalSufragantesAlcaldia,
+        votosBlaancosPrefectura: votosBlaancosPrefectura,
+        votosNulosPrefectura: votosNulosPrefectura,
+        totalSufragantesPrefectura: totalSufragantesPrefectura,
         fotoUrlAlcaldia: fotoUrlAlcaldia,
         fotoUrlPrefectura: fotoUrlPrefectura,
         latitudAlcaldia: latitudAlcaldia,
         longitudAlcaldia: longitudAlcaldia,
         latitudPrefectura: latitudPrefectura,
         longitudPrefectura: longitudPrefectura,
-        corregida: corregida,
         votosAlcaldia: votosAlcaldia,
         votosPrefectura: votosPrefectura,
       );
@@ -307,5 +314,45 @@ class RecintoCoordRemoteDataSource {
       'apellidos': apellidos,
       'telefono': telefono,
     }).eq('id', id);
+  }
+  Future<String> subirFotoActa({
+    required String mesaId,
+    required String dignidad,
+    required List<int> bytes,
+  }) async {
+    final path = 'actas/$mesaId/$dignidad/acta.jpg';
+    await supabaseClient.storage.from('actas-fotos').uploadBinary(
+      path,
+      Uint8List.fromList(bytes),
+      fileOptions: const FileOptions(contentType: 'image/jpeg', upsert: true),
+    );
+    return supabaseClient.storage.from('actas-fotos').getPublicUrl(path);
+  }
+
+  Future<void> corregirActaPorDignidad({
+    required String actaId,
+    required int votosBlancos,
+    required int votosNulos,
+    required int totalSufragantes,
+    String? fotoUrl,
+    required List<Map<String, dynamic>> votos,
+  }) async {
+    final actasData = <String, dynamic>{
+      'votos_blancos': votosBlancos,
+      'votos_nulos': votosNulos,
+      'total_sufragantes': totalSufragantes,
+      'corregida': true,
+    };
+    if (fotoUrl != null) actasData['foto_url'] = fotoUrl;
+
+    await supabaseClient.from('actas').update(actasData).eq('id', actaId);
+
+    for (final voto in votos) {
+      await supabaseClient
+          .from('votos_candidatos')
+          .update({'cantidad': voto['cantidad']})
+          .eq('acta_id', actaId)
+          .eq('candidato_id', voto['candidato_id']);
+    }
   }
 }

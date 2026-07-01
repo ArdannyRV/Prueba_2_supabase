@@ -4,22 +4,32 @@ class MesaDetalleEntity {
   final String? veedorId;
   final String? veedorNombre;
   final bool tieneActa;
-  final String? actaId;
-  
-  // Datos del acta (null si no existe aún)
-  final int? votosBlancos;
-  final int? votosNulos;
-  final int? totalSufragantes;
+  final bool? corregida;
+
+  // IDs separados por dignidad
+  final String? actaIdAlcaldia;
+  final String? actaIdPrefectura;
+
+  // Totales por dignidad
+  final int? votosBlaancosAlcaldia;
+  final int? votosNulosAlcaldia;
+  final int? totalSufragantesAlcaldia;
+  final int? votosBlaancosPrefectura;
+  final int? votosNulosPrefectura;
+  final int? totalSufragantesPrefectura;
+
+  // Fotos por dignidad
   final String? fotoUrlAlcaldia;
   final String? fotoUrlPrefectura;
+
+  // GPS por dignidad
   final double? latitudAlcaldia;
   final double? longitudAlcaldia;
   final double? latitudPrefectura;
   final double? longitudPrefectura;
-  final bool? corregida;
-  
+
   // Votos por dignidad
-  final List<Map<String, dynamic>> votosAlcaldia; // [{nombre_candidato, organizacion_politica, cantidad}]
+  final List<Map<String, dynamic>> votosAlcaldia;
   final List<Map<String, dynamic>> votosPrefectura;
 
   const MesaDetalleEntity({
@@ -28,17 +38,21 @@ class MesaDetalleEntity {
     this.veedorId,
     this.veedorNombre,
     this.tieneActa = false,
-    this.actaId,
-    this.votosBlancos,
-    this.votosNulos,
-    this.totalSufragantes,
+    this.corregida,
+    this.actaIdAlcaldia,
+    this.actaIdPrefectura,
+    this.votosBlaancosAlcaldia,
+    this.votosNulosAlcaldia,
+    this.totalSufragantesAlcaldia,
+    this.votosBlaancosPrefectura,
+    this.votosNulosPrefectura,
+    this.totalSufragantesPrefectura,
     this.fotoUrlAlcaldia,
     this.fotoUrlPrefectura,
     this.latitudAlcaldia,
     this.longitudAlcaldia,
     this.latitudPrefectura,
     this.longitudPrefectura,
-    this.corregida,
     this.votosAlcaldia = const [],
     this.votosPrefectura = const [],
   });
