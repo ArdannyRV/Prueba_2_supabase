@@ -5,6 +5,7 @@ class VeedorState {
   final List<MesaVeedorEntity> mesas;
   final List<Map<String, dynamic>> actasActuales; 
   final List<Map<String, dynamic>> actasEnConflicto;
+  final bool mostrandoDatosOffline;
   final String? successMessage;
   final String? errorMessage;
 
@@ -13,6 +14,7 @@ class VeedorState {
     this.mesas = const [],
     this.actasActuales = const [],
     this.actasEnConflicto = const [],
+    this.mostrandoDatosOffline = false,
     this.successMessage,
     this.errorMessage,
   });
@@ -22,6 +24,7 @@ class VeedorState {
     List<MesaVeedorEntity>? mesas,
     List<Map<String, dynamic>>? actasActuales,
     List<Map<String, dynamic>>? actasEnConflicto,
+    bool? mostrandoDatosOffline,
     String? successMessage,
     String? errorMessage,
     bool clearSuccess = false,
@@ -32,6 +35,7 @@ class VeedorState {
       mesas: mesas ?? this.mesas,
       actasActuales: actasActuales ?? this.actasActuales,
       actasEnConflicto: actasEnConflicto ?? this.actasEnConflicto,
+      mostrandoDatosOffline: mostrandoDatosOffline ?? this.mostrandoDatosOffline,
       successMessage: clearSuccess ? null : (successMessage ?? this.successMessage),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
     );

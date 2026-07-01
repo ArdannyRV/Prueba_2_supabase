@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../domain/repositories/veedor_repository.dart';
+import '../../domain/entities/mesa_veedor_entity.dart';
 import 'veedor_event.dart';
 import 'veedor_state.dart';
 
@@ -21,7 +22,20 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
   Future<void> _onInitVeedor(InitVeedorEvent event, Emitter<VeedorState> emit) async {
     emit(state.copyWith(isLoading: true, clearSuccess: true, clearError: true));
     try {
-      final mesas = await repository.getMisAsignadas();
+      bool offline = false;
+      List<MesaVeedorEntity> mesas;
+      try {
+        mesas = await repository.getMisAsignadas(forceRefresh: true);
+      } catch (e) {
+        offline = true;
+        if (event.forceRefresh) {
+          throw Exception('No se pudo actualizar desde el servidor: ${e.toString()}');
+        } else {
+          // Fallback a caché local
+          mesas = await repository.getMisAsignadas(forceRefresh: false);
+        }
+      }
+
       final conflictos = await repository.getActasEnConflicto();
       
       // Cachear candidatos de forma silenciosa para que estén disponibles offline
@@ -29,13 +43,14 @@ class VeedorBloc extends Bloc<VeedorEvent, VeedorState> {
         await repository.getCandidatos('alcaldia');
         await repository.getCandidatos('prefectura');
       } catch (_) {
-        // Ignorar errores aquí. Si no hay conexión y no hay caché, fallará en registro_acta_page
+        // Ignorar errores aquí
       }
 
       emit(state.copyWith(
         isLoading: false,
         mesas: mesas,
         actasEnConflicto: conflictos,
+        mostrandoDatosOffline: offline,
       ));
     } catch (e) {
       emit(state.copyWith(

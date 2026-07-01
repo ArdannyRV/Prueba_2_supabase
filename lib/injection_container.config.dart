@@ -111,15 +111,16 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i26.AuthRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
     gh.lazySingleton<_i558.DashboardRemoteDataSource>(
         () => _i558.DashboardRemoteDataSourceImpl(gh<_i454.SupabaseClient>()));
-    gh.lazySingleton<_i850.AuthRepository>(() => _i1056.AuthRepositoryImpl(
-          remoteDataSource: gh<_i26.AuthRemoteDataSource>(),
-          networkInfo: gh<_i55.NetworkInfo>(),
-        ));
     gh.lazySingleton<_i405.SyncService>(() => _i405.SyncService(
           localDataSource: gh<_i511.VeedorLocalDataSource>(),
           remoteDataSource: gh<_i398.VeedorRemoteDataSource>(),
           networkInfo: gh<_i55.NetworkInfo>(),
           connectivity: gh<_i895.Connectivity>(),
+        ));
+    gh.lazySingleton<_i850.AuthRepository>(() => _i1056.AuthRepositoryImpl(
+          remoteDataSource: gh<_i26.AuthRemoteDataSource>(),
+          networkInfo: gh<_i55.NetworkInfo>(),
+          appDatabase: gh<_i751.AppDatabase>(),
         ));
     gh.lazySingleton<_i1038.DashboardRepository>(() =>
         _i324.DashboardRepositoryImpl(gh<_i558.DashboardRemoteDataSource>()));

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:uuid/uuid.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/network/network_info.dart';
@@ -24,15 +25,19 @@ class VeedorRepositoryImpl implements VeedorRepository {
   });
 
   @override
-  Future<List<MesaVeedorEntity>> getMisAsignadas() async {
+  Future<List<MesaVeedorEntity>> getMisAsignadas({bool forceRefresh = false}) async {
     final userId = remoteDataSource.supabaseClient.auth.currentUser!.id;
     
-    if (await networkInfo.isConnected) {
+    if (await networkInfo.isConnected || forceRefresh) {
       try {
         final mesasRemotas = await remoteDataSource.getMisAsignadas();
         await localDataSource.cacheMesasAsignadas(userId, mesasRemotas);
         return mesasRemotas;
-      } catch (e) {
+      } catch (e, stackTrace) {
+        debugPrint('Error en getMisAsignadas (red): $e\n$stackTrace');
+        if (forceRefresh) {
+          rethrow;
+        }
         // Si falla la red temporalmente o hay timeout, fallback a local
         return await localDataSource.getMesasAsignadasCached(userId);
       }

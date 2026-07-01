@@ -1,7 +1,7 @@
 import '../../domain/entities/mesa_veedor_entity.dart';
 
 abstract class VeedorRepository {
-  Future<List<MesaVeedorEntity>> getMisAsignadas();
+  Future<List<MesaVeedorEntity>> getMisAsignadas({bool forceRefresh = false});
   
   Future<List<Map<String, dynamic>>> getMisActas(String mesaId);
 

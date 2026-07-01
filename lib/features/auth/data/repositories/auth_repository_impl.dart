@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/network/network_info.dart';
+import '../../../../core/database/app_database.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_data_source.dart';
@@ -10,10 +11,12 @@ import '../datasources/auth_remote_data_source.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
   final NetworkInfo networkInfo;
+  final AppDatabase appDatabase;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
     required this.networkInfo,
+    required this.appDatabase,
   });
 
   @override
@@ -78,6 +81,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Either<Failure, void>> signOut() async {
     try {
       await remoteDataSource.signOut();
+      
+      // Limpiar el caché de mesas locales para que el siguiente usuario no vea datos del usuario anterior
+      final db = await appDatabase.database;
+      await db.delete('mesas_local');
+      
       return const Right(null);
     } catch (e) {
       return Left(AuthFailure(e.toString()));

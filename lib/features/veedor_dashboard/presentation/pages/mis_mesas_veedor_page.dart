@@ -22,7 +22,7 @@ class _MisMesasVeedorPageState extends State<MisMesasVeedorPage> {
   }
 
   Future<void> _onRefresh() async {
-    context.read<VeedorBloc>().add(InitVeedorEvent());
+    context.read<VeedorBloc>().add(InitVeedorEvent(forceRefresh: true));
     // Esperar un momento para que el RefreshIndicator se muestre animado
     await Future.delayed(const Duration(milliseconds: 500));
   }
@@ -149,9 +149,37 @@ class _MisMesasVeedorPageState extends State<MisMesasVeedorPage> {
           );
         }
 
-        return RefreshIndicator(
-          onRefresh: _onRefresh,
-          child: content,
+        return Column(
+          children: [
+            if (state.mostrandoDatosOffline)
+              Container(
+                width: double.infinity,
+                color: Colors.orange.shade100,
+                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  children: [
+                    Icon(Icons.offline_bolt, color: Colors.orange.shade800, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Mostrando datos guardados sin conexión, desliza para actualizar',
+                        style: TextStyle(
+                          color: Colors.orange.shade900,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: _onRefresh,
+                child: content,
+              ),
+            ),
+          ],
         );
       },
     );

@@ -1,6 +1,9 @@
 abstract class VeedorEvent {}
 
-class InitVeedorEvent extends VeedorEvent {}
+class InitVeedorEvent extends VeedorEvent {
+  final bool forceRefresh;
+  InitVeedorEvent({this.forceRefresh = false});
+}
 
 class FetchMisActasEvent extends VeedorEvent {
   final String mesaId;

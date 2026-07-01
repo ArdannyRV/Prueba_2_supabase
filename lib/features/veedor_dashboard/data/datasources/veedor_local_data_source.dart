@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:uuid/uuid.dart';
 import 'package:injectable/injectable.dart';
@@ -17,8 +18,9 @@ class VeedorLocalDataSource {
     final db = await appDatabase.database;
     await db.transaction((txn) async {
       // Eliminar las mesas previas de este veedor
-      await txn.delete('mesas_local', where: 'veedor_id = ?', whereArgs: [veedorId]);
-
+      final deleted = await txn.delete('mesas_local', where: 'veedor_id = ?', whereArgs: [veedorId]);
+      
+      int inserted = 0;
       for (final mesa in mesas) {
         await txn.insert('mesas_local', {
           'id': mesa.id,
@@ -28,7 +30,10 @@ class VeedorLocalDataSource {
           'tiene_acta_alcaldia': mesa.tieneActaAlcaldia ? 1 : 0,
           'tiene_acta_prefectura': mesa.tieneActaPrefectura ? 1 : 0,
         });
+        inserted++;
       }
+      
+      debugPrint('cacheMesasAsignadas: Eliminadas \$deleted mesas locales, Insertadas \$inserted nuevas mesas para veedor \$veedorId');
     });
   }
 
