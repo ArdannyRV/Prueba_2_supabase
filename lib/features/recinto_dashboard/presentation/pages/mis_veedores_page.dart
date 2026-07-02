@@ -273,7 +273,7 @@ class _MisVeedoresPageState extends State<MisVeedoresPage> {
                                   Text(veedor.cedula ?? 'Sin cédula', style: const TextStyle(fontSize: 12)),
                                   const SizedBox(height: 2),
                                   Text(
-                                    veedor.mesaAsignada ?? 'Sin mesa asignada',
+                                    veedor.mesaAsignada != null ? 'Asignado a mesa' : 'Sin mesa asignada',
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: veedor.mesaAsignada != null ? AppTheme.flagBlue : Colors.black54,

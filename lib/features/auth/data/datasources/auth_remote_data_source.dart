@@ -66,6 +66,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         debeCambiarPass: debeCambiarPass,
       );
     } on AuthException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('email not confirmed') || msg.contains('email_not_confirmed')) {
+        throw Exception('Su cuenta aún no ha sido confirmada');
+      }
       throw Exception(e.message);
     } catch (e) {
       throw Exception('Error al iniciar sesión: $e');

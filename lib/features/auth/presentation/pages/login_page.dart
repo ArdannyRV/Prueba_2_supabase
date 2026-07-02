@@ -44,6 +44,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   String? _resolverMensajeError(String message) {
+    if (message.contains('aún no ha sido confirmada')) {
+      return message;
+    }
+    
     final msg = message.toLowerCase();
     if (msg.contains('invalid') ||
         msg.contains('credentials') ||
