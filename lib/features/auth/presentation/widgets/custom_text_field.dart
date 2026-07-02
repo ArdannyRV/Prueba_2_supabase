@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
@@ -8,6 +9,8 @@ class CustomTextField extends StatefulWidget {
   final bool isPassword;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
+  final List<TextInputFormatter>? inputFormatters;
+  final int? maxLength;
 
   const CustomTextField({
     super.key,
@@ -18,6 +21,8 @@ class CustomTextField extends StatefulWidget {
     this.isPassword = false,
     this.keyboardType,
     this.validator,
+    this.inputFormatters,
+    this.maxLength,
   });
 
   @override
@@ -34,7 +39,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
       obscureText: widget.isPassword && _obscureText,
       keyboardType: widget.keyboardType,
       validator: widget.validator,
+      inputFormatters: widget.inputFormatters,
+      maxLength: widget.maxLength,
       decoration: InputDecoration(
+        counterText: '',
         labelText: widget.label,
         hintText: widget.hint,
         prefixIcon: widget.prefixIcon != null

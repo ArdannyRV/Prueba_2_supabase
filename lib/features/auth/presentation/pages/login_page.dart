@@ -10,6 +10,8 @@ import '../widgets/loading_overlay.dart';
 import 'reset_password_page.dart';
 import '../../../provincial_dashboard/presentation/pages/provincial_main_page.dart';
 import 'change_initial_password_page.dart';
+import 'package:flutter/services.dart';
+import '../../../../core/utils/cedula_validator.dart';
 import '../../../recinto_dashboard/presentation/pages/recinto_dashboard_page.dart';
 import '../../../veedor_dashboard/presentation/pages/veedor_dashboard_page.dart';
 
@@ -22,12 +24,12 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _cedulaController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _cedulaController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -36,7 +38,7 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState!.validate()) {
       context.read<AuthBloc>().add(
             SignInRequested(
-              email: _emailController.text.trim(),
+              cedula: _cedulaController.text.trim(),
               password: _passwordController.text,
             ),
           );
@@ -53,8 +55,9 @@ class _LoginPageState extends State<LoginPage> {
         msg.contains('credentials') ||
         msg.contains('password') ||
         msg.contains('user not found') ||
-        msg.contains('email')) {
-      return 'Correo o contraseña incorrectos. Por favor verifica tus datos e intenta de nuevo.';
+        msg.contains('email') ||
+        msg.contains('cédula')) {
+      return 'Cédula o contraseña incorrectos. Por favor verifica tus datos e intenta de nuevo.';
     }
     return 'No se pudo iniciar sesión. Por favor intenta de nuevo.';
   }
@@ -133,14 +136,16 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: 48),
                         CustomTextField(
-                          controller: _emailController,
-                          label: 'Correo electrónico',
-                          hint: 'tu@email.com',
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _cedulaController,
+                          label: 'Cédula de identidad',
+                          hint: '10 dígitos',
+                          prefixIcon: Icons.badge_outlined,
+                          keyboardType: TextInputType.number,
+                          maxLength: 10,
+                          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                           validator: (value) {
-                            if (value == null || value.isEmpty) return 'Por favor ingresa tu correo';
-                            if (!value.contains('@')) return 'Por favor ingresa un correo válido';
+                            if (value == null || value.isEmpty) return 'Por favor ingresa tu cédula';
+                            if (!CedulaValidator.validar(value)) return 'Cédula inválida';
                             return null;
                           },
                         ),

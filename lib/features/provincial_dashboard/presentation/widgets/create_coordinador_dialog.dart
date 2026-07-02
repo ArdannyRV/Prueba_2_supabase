@@ -4,6 +4,8 @@ import '../../../../core/utils/cedula_validator.dart';
 import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
 import '../bloc/provincial_state.dart';
+import '../../../../core/utils/nombre_validator.dart';
+import '../../../../core/utils/telefono_validator.dart';
 
 class CreateCoordinadorDialog extends StatefulWidget {
   final String recintoId;
@@ -133,20 +135,39 @@ class _CreateCoordinadorDialogState extends State<CreateCoordinadorDialog> {
                       TextFormField(
                         controller: _nombresController,
                         decoration: const InputDecoration(labelText: 'Nombres', prefixIcon: Icon(Icons.person)),
-                        validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Requerido';
+                          if (!NombreValidator.validar(v)) return 'Solo se permiten letras';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _apellidosController,
                         decoration: const InputDecoration(labelText: 'Apellidos', prefixIcon: Icon(Icons.person_outline)),
-                        validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Requerido';
+                          if (!NombreValidator.validar(v)) return 'Solo se permiten letras';
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 8),
                       TextFormField(
                         controller: _telefonoController,
                         keyboardType: TextInputType.phone,
-                        decoration: const InputDecoration(labelText: 'Teléfono', prefixIcon: Icon(Icons.phone)),
-                        validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                        maxLength: TelefonoValidator.longitudExacta,
+                        decoration: const InputDecoration(
+                          labelText: 'Teléfono',
+                          prefixIcon: Icon(Icons.phone),
+                          counterText: '',
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Requerido';
+                          if (!TelefonoValidator.validar(v)) {
+                            return 'Debe tener exactamente ${TelefonoValidator.longitudExacta} dígitos numéricos';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 8),
                       TextFormField(

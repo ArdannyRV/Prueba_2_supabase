@@ -4,6 +4,8 @@ import '../../domain/entities/coordinador_entity.dart';
 import '../bloc/provincial_bloc.dart';
 import '../bloc/provincial_event.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/nombre_validator.dart';
+import '../../../../core/utils/telefono_validator.dart';
 
 class UpdateCoordinadorForm extends StatefulWidget {
   final CoordinadorEntity coordinador;
@@ -108,7 +110,11 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
                   child: TextFormField(
                     controller: _nombresCtrl,
                     decoration: const InputDecoration(labelText: 'Nombres'),
-                    validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Requerido';
+                      if (!NombreValidator.validar(v)) return 'Solo se permiten letras';
+                      return null;
+                    },
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -116,7 +122,11 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
                   child: TextFormField(
                     controller: _apellidosCtrl,
                     decoration: const InputDecoration(labelText: 'Apellidos'),
-                    validator: (v) => v!.isEmpty ? 'Requerido' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Requerido';
+                      if (!NombreValidator.validar(v)) return 'Solo se permiten letras';
+                      return null;
+                    },
                   ),
                 ),
               ],
@@ -126,9 +136,19 @@ class _UpdateCoordinadorFormState extends State<UpdateCoordinadorForm> {
             // Teléfono
             TextFormField(
               controller: _telefonoCtrl,
-              decoration: const InputDecoration(labelText: 'Teléfono'),
+              decoration: const InputDecoration(
+                labelText: 'Teléfono',
+                counterText: '',
+              ),
               keyboardType: TextInputType.phone,
-              validator: (v) => v!.isEmpty ? 'Campo requerido' : null,
+              maxLength: TelefonoValidator.longitudExacta,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Requerido';
+                if (!TelefonoValidator.validar(v)) {
+                  return 'Debe tener exactamente ${TelefonoValidator.longitudExacta} dígitos numéricos';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 12),
 

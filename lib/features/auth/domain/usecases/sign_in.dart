@@ -13,19 +13,19 @@ class SignIn implements UseCase<UserEntity, SignInParams> {
 
   @override
   Future<Either<Failure, UserEntity>> call(SignInParams params) async {
-    return await repository.signInWithEmailAndPassword(
-      email: params.email,
+    return await repository.signInWithCedulaAndPassword(
+      cedula: params.cedula,
       password: params.password,
     );
   }
 }
 
 class SignInParams {
-  final String email;
+  final String cedula;
   final String password;
 
   SignInParams({
-    required this.email,
+    required this.cedula,
     required this.password,
   });
 }

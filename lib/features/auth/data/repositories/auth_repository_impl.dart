@@ -20,8 +20,8 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Either<Failure, UserEntity>> signInWithEmailAndPassword({
-    required String email,
+  Future<Either<Failure, UserEntity>> signInWithCedulaAndPassword({
+    required String cedula,
     required String password,
   }) async {
     if (!await networkInfo.isConnected) {
@@ -29,8 +29,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     try {
-      final user = await remoteDataSource.signInWithEmailAndPassword(
-        email: email,
+      final user = await remoteDataSource.signInWithCedulaAndPassword(
+        cedula: cedula,
         password: password,
       );
       return Right(user);

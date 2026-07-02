@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> signInWithEmailAndPassword({
-    required String email,
+  Future<UserModel> signInWithCedulaAndPassword({
+    required String cedula,
     required String password,
   });
 
@@ -33,13 +33,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl(this.supabaseClient);
 
   @override
-  Future<UserModel> signInWithEmailAndPassword({
-    required String email,
+  Future<UserModel> signInWithCedulaAndPassword({
+    required String cedula,
     required String password,
   }) async {
     try {
+      final correoResp = await supabaseClient.rpc(
+        'obtener_correo_por_cedula',
+        params: {'p_cedula': cedula},
+      );
+      final String? correo = correoResp as String?;
+
+      if (correo == null) {
+        throw Exception('Cédula o contraseña incorrectos');
+      }
+
       final response = await supabaseClient.auth.signInWithPassword(
-        email: email,
+        email: correo,
         password: password,
       );
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/nombre_validator.dart';
+import '../../../../core/utils/telefono_validator.dart';
 import '../../domain/entities/veedor_entity.dart';
 import '../bloc/recinto_coord_bloc.dart';
 import '../bloc/recinto_coord_event.dart';
@@ -107,7 +109,11 @@ class _EditarVeedorBottomSheetState extends State<EditarVeedorBottomSheet> {
                       labelText: 'Nombres',
                       prefixIcon: Icon(Icons.person_outline),
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Requerido';
+                      if (!NombreValidator.validar(v)) return 'Solo se permiten letras';
+                      return null;
+                    },
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -118,7 +124,11 @@ class _EditarVeedorBottomSheetState extends State<EditarVeedorBottomSheet> {
                     decoration: const InputDecoration(
                       labelText: 'Apellidos',
                     ),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+                    validator: (v) {
+                      if (v == null || v.isEmpty) return 'Requerido';
+                      if (!NombreValidator.validar(v)) return 'Solo se permiten letras';
+                      return null;
+                    },
                   ),
                 ),
               ],
@@ -128,11 +138,19 @@ class _EditarVeedorBottomSheetState extends State<EditarVeedorBottomSheet> {
             TextFormField(
               controller: _telefonoCtrl,
               keyboardType: TextInputType.phone,
+              maxLength: TelefonoValidator.longitudExacta,
               decoration: const InputDecoration(
                 labelText: 'Teléfono',
                 prefixIcon: Icon(Icons.phone_outlined),
+                counterText: '',
               ),
-              validator: (v) => (v == null || v.isEmpty) ? 'Requerido' : null,
+              validator: (v) {
+                if (v == null || v.isEmpty) return 'Requerido';
+                if (!TelefonoValidator.validar(v)) {
+                  return 'Debe tener exactamente ${TelefonoValidator.longitudExacta} dígitos numéricos';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             

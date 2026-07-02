@@ -39,7 +39,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     final result = await signIn(
       SignInParams(
-        email: event.email,
+        cedula: event.cedula,
         password: event.password,
       ),
     );
