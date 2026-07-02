@@ -31,6 +31,8 @@ class CrearVeedorEvent extends RecintoCoordEvent {
   final String apellidos;
   final String telefono;
   final String correo;
+  final String recintoId;
+  final String coordinadorId;
 
   const CrearVeedorEvent({
     required this.cedula,
@@ -38,6 +40,8 @@ class CrearVeedorEvent extends RecintoCoordEvent {
     required this.apellidos,
     required this.telefono,
     required this.correo,
+    required this.recintoId,
+    required this.coordinadorId,
   });
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/cedula_validator.dart';
 import '../bloc/recinto_coord_bloc.dart';
@@ -33,6 +34,22 @@ class _CreateVeedorBottomSheetState extends State<CreateVeedorBottomSheet> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    
+    final recintoId = context.read<RecintoCoordBloc>().state.recintoId;
+    if (recintoId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No se pudo obtener el recinto actual')),
+      );
+      return;
+    }
+
+    final coordinadorId = Supabase.instance.client.auth.currentUser?.id;
+    if (coordinadorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No se pudo obtener el usuario actual')),
+      );
+      return;
+    }
 
     context.read<RecintoCoordBloc>().add(
       CrearVeedorEvent(
@@ -41,6 +58,8 @@ class _CreateVeedorBottomSheetState extends State<CreateVeedorBottomSheet> {
         apellidos: _apellidosCtrl.text.trim(),
         telefono: _telefonoCtrl.text.trim(),
         correo: _correoCtrl.text.trim(),
+        recintoId: recintoId,
+        coordinadorId: coordinadorId,
       ),
     );
     Navigator.of(context).pop();

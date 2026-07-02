@@ -110,6 +110,8 @@ class RecintoCoordBloc extends Bloc<RecintoCoordEvent, RecintoCoordState> {
         apellidos: event.apellidos,
         telefono: event.telefono,
         correo: event.correo,
+        recintoId: event.recintoId,
+        coordinadorId: event.coordinadorId,
       );
       emit(state.copyWith(
         isLoading: false,

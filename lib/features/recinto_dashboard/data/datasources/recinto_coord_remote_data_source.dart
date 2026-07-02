@@ -168,13 +168,12 @@ class RecintoCoordRemoteDataSource {
   }
 
   Future<List<VeedorEntity>> getTodosVeedores(String recintoId) async {
-    // Obtenemos todos los veedores, luego los cruzamos con las mesas para saber si tienen asignación
+    final userId = supabaseClient.auth.currentUser!.id;
     final veedoresResp = await supabaseClient
         .from('perfiles')
         .select()
-        .eq('rol', 'veedor');
-        // idealmente filtrar por los creados por este coordinador si hubiera una columna, pero según schema solo podemos traernos todos o todos los del recinto actual.
-        // Asumiendo que el requerimiento "Todos los perfiles con rol='veedor'" se refiere a todos en la base de datos (o se puede filtrar después).
+        .eq('rol', 'veedor')
+        .eq('coordinador_id', userId);
 
     final mesasResp = await supabaseClient
         .from('mesas')
@@ -220,6 +219,8 @@ class RecintoCoordRemoteDataSource {
     required String apellidos,
     required String telefono,
     required String correo,
+    required String recintoId,
+    required String coordinadorId,
   }) async {
     try {
       final response = await supabaseClient.functions.invoke(
@@ -232,6 +233,8 @@ class RecintoCoordRemoteDataSource {
           'apellidos': apellidos,
           'telefono': telefono,
           'rol': 'veedor',
+          'recinto_id': recintoId,
+          'coordinador_id': coordinadorId,
         },
       );
 
